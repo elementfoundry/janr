@@ -1,14 +1,15 @@
-interface={{ five_g.interface }}
+#interface=wlan0
+interface=br0
 bind-interfaces
 
 # Disable dnsmasq DNS listener
 port=0
 
 # DHCP pool
-dhcp-range={{ five_g.dhcp_start }},{{ five_g.dhcp_end }},{{ dhcp_lease_time }}
+dhcp-range=10.10.0.100,10.10.0.150,12h
 
 # Gateway
-dhcp-option=option:router,{{ five_g.ip }}
+dhcp-option=option:router,10.10.0.1
 
 # Advertise JANR/Unbound as DNS
-dhcp-option=option:dns-server,{{ five_g.ip }}
+dhcp-option=option:dns-server,10.10.0.1

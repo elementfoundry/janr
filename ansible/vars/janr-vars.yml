@@ -5,6 +5,7 @@ unused_services:
   - wpa_supplicant
   - hostapd
   - systemd-resolved
+  - dnsmasq
 
 router_packages:
   - systemd

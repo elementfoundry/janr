@@ -18,7 +18,7 @@
 
 
   # =========================================================
-  # 2.BLOCK Debian firmware packages at the APT level (prevents reinstallation)
+  # 2. BLOCK DEBIAN FIRMWARE PACKAGES
   # =========================================================
   - name: Prevent Debian firmware packages from being installed
     copy:
@@ -36,9 +36,6 @@
         Pin: release *
         Pin-Priority: -1
 
-  # ---------------------------------------------------------
-  # Remove Debian firmware packages if they exist (best-effort cleanup)
-  # ---------------------------------------------------------
   - name: Remove conflicting Debian firmware packages (if present)
     apt:
       name:
@@ -49,9 +46,6 @@
       purge: yes
     ignore_errors: yes
 
-  # ---------------------------------------------------------
-  # Ensure Armbian firmware is protected (ONLY valid hold)
-  # ---------------------------------------------------------
   - name: Hold Armbian firmware package
     dpkg_selections:
       name: armbian-firmware
@@ -59,7 +53,7 @@
 
 
   # =========================================================
-  # 3. INSTALL PACKAGES (BASE SYSTEM)
+  # 3. BASE PACKAGES
   # =========================================================
   - name: Ensure router base packages are installed
     apt:
@@ -67,109 +61,130 @@
       state: present
       update_cache: yes
 
+
   # =========================================================
-  # FIX: Restore ping capability (cap_net_raw)
-  # Ensures /usr/bin/ping works after package transitions
+  # 4. FIX CAPABILITIES (PING)
   # =========================================================
   - name: Ensure ping has cap_net_raw capability
-    ansible.builtin.command: setcap cap_net_raw+ep /usr/bin/ping
+    command: setcap cap_net_raw+ep /usr/bin/ping
     changed_when: false
 
+
   # =========================================================
-  # 4. DEPLOY CONFIGURATION FILES (NO SERVICE RESTARTS YET)
+  # 5. NETWORK CONFIGURATION
   # =========================================================
+  - name: Deploy bridge netdev
+    template:
+      src: network/00-janr-br0.netdev.j2
+      dest: /etc/systemd/network/00-janr-br0.netdev
+
+  - name: Deploy bridge network config
+    template:
+      src: network/00-janr-br0.network.j2
+      dest: /etc/systemd/network/00-janr-br0.network
+
+  - name: Deploy WAN interface config
+    template:
+      src: network/10-janr-wan.network.j2
+      dest: /etc/systemd/network/10-janr-wan.network
+
   - name: Deploy wlan0 AP network config
     template:
-      src: network/wlan0-ap.network.j2
-      dest: /etc/systemd/network/20-wlan0-ap.network
+      src: network/20-janr-wlan0-ap.network.j2
+      dest: /etc/systemd/network/20-janr-wlan0-ap.network
 
+
+  # =========================================================
+  # 6. NETPLAN CLEANUP
+  # =========================================================
   - name: Check if Netplan config exists
-    ansible.builtin.stat:
+    stat:
       path: /etc/netplan/10-dhcp-all-interfaces.yaml
     register: netplan_file
 
   - name: Backup Netplan config if it exists
-    ansible.builtin.copy:
+    copy:
       src: /etc/netplan/10-dhcp-all-interfaces.yaml
       dest: /etc/netplan/10-dhcp-all-interfaces.yaml.orig
       remote_src: true
     when: netplan_file.stat.exists
 
   - name: Remove Netplan config if it exists
-    ansible.builtin.file:
+    file:
       path: /etc/netplan/10-dhcp-all-interfaces.yaml
       state: absent
     when: netplan_file.stat.exists
 
+
+  # =========================================================
+  # 7. DNS (UNBOUND)
+  # =========================================================
   - name: Create unbound runtime directory
     file:
       path: /var/lib/unbound
       state: directory
+      owner: unbound
+      group: unbound
       mode: "0755"
 
   - name: Download root hints
     get_url:
       url: https://www.internic.net/domain/named.cache
       dest: /var/lib/unbound/root.hints
-
-  - name: Generate DNSSEC trust anchor
-    command: unbound-anchor -a /var/lib/unbound/root.key
-    args:
-      creates: /var/lib/unbound/root.key
+      mode: "0644"
 
   - name: Deploy unbound config
     template:
       src: dns/unbound.conf.j2
       dest: /etc/unbound/unbound.conf.d/janr.conf
 
-  # ---------------------------------------------------------
-  # TODO: Move to template
-  # ---------------------------------------------------------
-  - name: Deploy WAN interface config for Arris uplink
-    become: true
-    ansible.builtin.copy:
-      dest: /etc/systemd/network/10-wan.network
-      mode: '0644'
-      content: |
-        [Match]
-        Name=enx00e04c681aa4
 
-        [Network]
-        DHCP=yes
-        IPv6AcceptRA=yes
-
-        [DHCP]
-        RouteMetric=100
-        UseMTU=true
-
+  # =========================================================
+  # 8. SYSCTL
+  # =========================================================
   - name: Deploy sysctl router config
     template:
       src: system/sysctl-router.conf.j2
       dest: /etc/sysctl.d/99-router.conf
 
+
+  # =========================================================
+  # 9. DNSMASQ (DHCP)
+  # =========================================================
   - name: Deploy dnsmasq config
     template:
       src: dns/dnsmasq-ap.conf.j2
       dest: /etc/dnsmasq.d/ap.conf
 
+
+  # =========================================================
+  # 10. HOSTAPD
+  # =========================================================
   - name: Deploy hostapd config (5G)
     template:
-      src: ap/hostapd-5g.conf.j2
-      dest: /etc/hostapd/hostapd-5g.conf
+      src: ap/janr-hostapd.conf.j2
+      dest: /etc/hostapd/janr-hostapd.conf
 
-  - name: Deploy nftables main config
+
+  # =========================================================
+  # 11. FIREWALL
+  # =========================================================
+  - name: Deploy nftables config
     template:
       src: firewall/nftables.conf.j2
-      # src: firewall/nftables-min.conf.j2
       dest: /etc/nftables.conf
       mode: "0644"
 
+
+  # =========================================================
+  # 12. RESOLV.CONF
+  # =========================================================
   - name: Remove resolv.conf symlink if present
     file:
       path: /etc/resolv.conf
       state: absent
 
-  - name: Set static resolver to unbound (loopback safe fallback)
+  - name: Set static resolver to unbound
     copy:
       dest: /etc/resolv.conf
       content: |
@@ -178,53 +193,59 @@
 
 
   # =========================================================
-  # 5. DEPLOY SERVICE DEFINITIONS
+  # 13. SERVICES
   # =========================================================
-  - name: Deploy hostapd 5G service
+  - name: Deploy hostapd service
     template:
-      src: services/hostapd-5g.service.j2
-      dest: /etc/systemd/system/hostapd-5g.service
-      mode: "0644"
+      src: services/janr-hostapd.service.j2
+      dest: /etc/systemd/system/janr-hostapd.service
 
-  - name: Install JANR unbound service unit
+  - name: Deploy unbound service
     template:
       src: services/janr-unbound.service.j2
       dest: /etc/systemd/system/janr-unbound.service
-      mode: "0644"
+
+  - name: Deploy dnsmasq service
+    template:
+      src: services/janr-dnsmasq.service.j2
+      dest: /etc/systemd/system/janr-dnsmasq.service
 
 
   # =========================================================
-  # 6. LOGGING (CONNTRACK VISIBILITY LAYER)
+  # 14. LOGGING
   # =========================================================
-  - name: ensure JANR runtime log directory exists (/run)
+  - name: Ensure runtime log directory exists
     file:
-      path: /run/log/janr
+      path: /run/janr/log
       state: directory
       mode: "0755"
 
-  - name: ensure JANR persistent log directory exists (/var/log)
+  - name: Ensure persistent log directory exists
     file:
       path: /var/log/janr
       state: directory
       mode: "0755"
 
-  - name: create symlink for easier log access
+  - name: Symlink firewall log
     file:
-      src: /run/log/janr/firewall.log
+      src: /run/janr/log/firewall.log
       dest: /var/log/janr/firewall.log
       state: link
       force: true
 
-  # ---------------------------------------------------------
-  # conntrack service (live WAN + NAT visibility)
-  # ---------------------------------------------------------
-  - name: install JANR conntrack monitoring service
+
+  # =========================================================
+  # 15. CONNTRACK SERVICE
+  # =========================================================
+  - name: Install JANR conntrack service
     copy:
       dest: /etc/systemd/system/janr-conntrack.service
       mode: "0644"
       content: |
         [Unit]
         Description=JANR Conntrack WAN Visibility Layer
+        Requires=systemd-networkd.service
+        After=systemd-networkd.service
         After=network-online.target
         Wants=network-online.target
 
@@ -245,22 +266,16 @@
         [Install]
         WantedBy=multi-user.target
 
-  - name: enable and start conntrack service
-    systemd:
-      name: janr-conntrack.service
-      enabled: true
-      state: started
-      daemon_reload: true
 
-  # ---------------------------------------------------------
-  # log rotation (hard cap: 10MB)
-  # ---------------------------------------------------------
-  - name: configure conntrack log rotation (10MB limit)
+  # =========================================================
+  # 16. LOG ROTATION
+  # =========================================================
+  - name: Configure logrotate
     copy:
       dest: /etc/logrotate.d/janr-conntrack
       mode: "0644"
       content: |
-        /run/log/janr/firewall.log {
+        /run/janr/log/firewall.log {
             size 10M
             rotate 2
             missingok
@@ -271,7 +286,7 @@
 
 
   # =========================================================
-  # 7. APPLY SYSTEM CONFIGURATION CHANGES (NO SERVICES YET)
+  # 17. SYSTEM APPLY
   # =========================================================
   - name: Apply sysctl changes
     command: sysctl --system
@@ -280,22 +295,21 @@
     systemd:
       daemon_reload: yes
 
-  
-  # =========================================================
-  # 8. DISABLE UNWANTED SERVICES 
-  # =========================================================
-  - name: Stop and disable unused services
+  - name: Enable systemd-networkd-wait-online
     systemd:
-      name: "{{ item }}"
+      name: systemd-networkd-wait-online.service
+      enabled: yes
+
+  - name: Mask stock dnsmasq service
+    systemd:
+      name: dnsmasq
       enabled: no
       masked: yes
       state: stopped
-    loop: "{{ unused_services }}"
-    ignore_errors: yes
- 
+
 
   # =========================================================
-  # 9. ENABLE + START CORE NETWORK STACK (ORDER MATTERS)
+  # 18. NETWORK CORE STARTUP
   # =========================================================
   - name: Enable and restart systemd-networkd
     systemd:
@@ -303,25 +317,69 @@
       enabled: yes
       state: restarted
 
-  - name: Enable and restart nftables
+  - name: Restart nftables
     systemd:
       name: nftables
       enabled: yes
       state: restarted
 
-  - name: Enable JANR unbound service
+
+  # =========================================================
+  # 19. DNSSEC TRUST ANCHOR
+  # =========================================================
+  - name: Check if root key exists
+    stat:
+      path: /var/lib/unbound/root.key
+    register: rootkey_before
+
+  - name: Attempt DNSSEC trust anchor generation
+    command: unbound-anchor -a /var/lib/unbound/root.key
+    when: not rootkey_before.stat.exists
+    ignore_errors: true
+
+  - name: Re-check if root key exists
+    stat:
+      path: /var/lib/unbound/root.key
+    register: rootkey_after
+    when: not rootkey_before.stat.exists
+
+  - name: Fail if root key was not created
+    fail:
+      msg: >
+        unbound-anchor did not create /var/lib/unbound/root.key.
+        DNSSEC bootstrap failed.
+    when:
+      - not rootkey_before.stat.exists
+      - not rootkey_after.stat.exists
+
+
+  # =========================================================
+  # 20. VALIDATE UNBOUND CONFIG
+  # =========================================================
+  - name: Validate unbound configuration
+    command: unbound-checkconf
+
+
+  # =========================================================
+  # 21. START DNS STACK
+  # =========================================================
+  - name: Start unbound
     systemd:
       name: janr-unbound
       enabled: true
-      state: started
-
-  - name: Enable and restart dnsmasq
-    systemd:
-      name: dnsmasq
-      enabled: yes
       state: restarted
 
-  - name: Enable and start conntrack service
+  - name: Start dnsmasq
+    systemd:
+      name: janr-dnsmasq
+      enabled: true
+      state: restarted
+
+
+  # =========================================================
+  # 22. START LOGGING
+  # =========================================================
+  - name: Start conntrack
     systemd:
       name: janr-conntrack.service
       enabled: true
@@ -329,10 +387,10 @@
 
 
   # =========================================================
-  # 10. START AP LAST
+  # 23. AP START LAST
   # =========================================================
-  - name: Enable and start hostapd 5G service
+  - name: Start hostapd
     systemd:
-      name: hostapd-5g.service
-      enabled: yes
+      name: janr-hostapd.service
+      enabled: true
       state: started

@@ -1,6 +1,6 @@
 [Unit]
 Description=JANR Unbound Recursive DNS Resolver
-After=network-online.target
+After=systemd-networkd.service network-online.target
 Wants=network-online.target
 
 [Service]
@@ -16,3 +16,4 @@ NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
+

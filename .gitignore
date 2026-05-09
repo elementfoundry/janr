@@ -97,3 +97,5 @@ result-*
 hosts.ini
 compare
 compare/*
+disk-images
+disk-images/*

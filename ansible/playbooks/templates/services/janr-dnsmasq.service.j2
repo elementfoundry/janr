@@ -1,0 +1,35 @@
+[Unit]
+Description=JANR DNSMasq DHCP Service (LAN DHCP only)
+Documentation=man:dnsmasq(8)
+
+# Hard dependency on network stack
+After=systemd-networkd.service network-online.target
+Wants=network-online.target
+
+# Ensure bridge exists before DHCP starts
+After=sys-subsystem-net-devices-br0.device
+Requires=sys-subsystem-net-devices-br0.device
+
+[Service]
+Type=simple
+
+# Use explicit config directory (not distro defaults)
+ExecStart=/usr/sbin/dnsmasq \
+  --conf-dir=/etc/dnsmasq.d \
+  --keep-in-foreground \
+  --bind-interfaces \
+  --interface=br0 \
+  --except-interface=lo
+
+# Restart behavior
+Restart=on-failure
+RestartSec=2
+
+# Hardening (optional but recommended)
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

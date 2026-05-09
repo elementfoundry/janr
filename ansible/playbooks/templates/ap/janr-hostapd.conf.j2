@@ -1,15 +1,16 @@
-interface={{ five_g.interface }}
+interface=wlan0
+bridge=br0
 driver=nl80211
 
 ctrl_interface=/run/hostapd
 ctrl_interface_group=0
 
-ssid={{ five_g.ssid }}
-country_code={{ country_code }}
+ssid=JANR-5G
+country_code=US
 ieee80211d=1
 
 hw_mode=a
-channel={{ five_g.channel }}
+channel=149
 
 ieee80211n=1
 ieee80211ac=1
@@ -27,6 +28,6 @@ beacon_int=100
 
 auth_algs=1
 wpa=2
-wpa_passphrase={{ five_g.password }}
+wpa_passphrase=1joshua1
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
