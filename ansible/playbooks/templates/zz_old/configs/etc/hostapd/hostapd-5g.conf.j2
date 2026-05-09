@@ -1,0 +1,32 @@
+interface={{ five_g_lan_interface }}
+driver=nl80211
+
+ctrl_interface=/run/hostapd
+ctrl_interface_group=0
+
+ssid={{ five_g_ssid }}
+country_code={{ country_code }}
+ieee80211d=1
+
+hw_mode=a
+channel={{ five_g_wifi_channel }}
+
+ieee80211n=1
+ieee80211ac=1
+wmm_enabled=1
+
+# HT (802.11n)
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+
+# VHT (802.11ac)
+vht_capab=[SHORT-GI-80][RXLDPC][MAX-MPDU-7991]
+vht_oper_chwidth=1
+vht_oper_centr_freq_seg0_idx=155
+
+beacon_int=100
+
+auth_algs=1
+wpa=2
+wpa_passphrase={{ five_g_wifi_password }}
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP

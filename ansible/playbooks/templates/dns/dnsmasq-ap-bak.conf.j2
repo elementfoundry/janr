@@ -1,0 +1,22 @@
+interface={{ five_g.interface }}
+bind-interfaces
+
+dhcp-range={{ five_g.dhcp_start }},{{ five_g.dhcp_end }},{{ dhcp_lease_time }}
+dhcp-option=option:router,{{ five_g.ip }}
+dhcp-option=option:dns-server,{{ upstream_ipv4_dns_servers | join(',') }}
+
+#
+interface={{five_g.interface }}
+bind-interfaces
+
+# Disable DNS service entirely
+port=0
+
+# DHCP pool
+dhcp-range={{ five_g.dhcp_start }},{{ five_g.dhcp_end }},{{ dhcp_lease_time }}
+
+# Gateway
+dhcp-option=option:router,{{ five_g.ip }}
+
+# Tell clients JANR handles DNS
+dhcp-option=option:dns-server,{{ dns_ip }}

@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+IF="{{ wan_interface }}"
+ITERATIONS=20
+
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "ERROR: check-cable must be run as root." >&2
+  echo "Hint: try sudo $0" >&2
+  exit 1
+fi
+
+echo "Starting Ethernet link stress test on $IF"
+echo "========================================"
+echo ""
+
+get_status() {
+  local SPEED
+  local CARRIER
+
+  SPEED=$(ethtool "$IF" 2>/dev/null | awk -F': ' '/Speed/ {print $2}' || true)
+  CARRIER=$(cat /sys/class/net/"$IF"/carrier 2>/dev/null || echo "?")
+
+  echo "speed=${SPEED:-unknown} carrier=${CARRIER:-?}"
+}
+
+is_valid_reading() {
+  local s="$1"
+
+  [[ "$s" != *"unknown"* ]] &&
+  [[ "$s" != *"Unknown"* ]] &&
+  [[ "$s" != *"carrier=?"* ]]
+}
+
+for i in $(seq 1 $ITERATIONS); do
+  TS=$(date '+%H:%M:%S')
+
+  echo "[$TS] Iteration $i: resetting interface..."
+
+  ip link set "$IF" down
+  sleep 1
+
+  ip link set "$IF" up
+
+  echo "    ↳ link brought up, waiting for PHY negotiation..."
+  sleep 3   # IMPORTANT: allow PHY/USB NIC to stabilize
+
+  STABLE_COUNT=0
+  LAST_STATUS=""
+
+  for j in $(seq 1 6); do
+    sleep 1
+
+    STATUS=$(get_status)
+    echo "       check $j: $STATUS"
+
+    if is_valid_reading "$STATUS"; then
+      if [[ "$STATUS" == "$LAST_STATUS" ]]; then
+        STABLE_COUNT=$((STABLE_COUNT + 1))
+      else
+        STABLE_COUNT=1
+        LAST_STATUS="$STATUS"
+      fi
+    else
+      STABLE_COUNT=0
+    fi
+
+    # Require stability before accepting result
+    if [[ $STABLE_COUNT -ge 2 ]]; then
+      break
+    fi
+  done
+
+  FINAL_STATUS=$(get_status)
+
+  if [[ "$FINAL_STATUS" == *"1000Mb/s"* ]]; then
+    echo "    ✔ Result: $FINAL_STATUS"
+  elif [[ "$FINAL_STATUS" == *"100Mb/s"* ]]; then
+    echo "    ⚠ Result: $FINAL_STATUS (DEGRADED LINK)"
+  else
+    echo "    ? Result: $FINAL_STATUS (UNSTABLE / TRANSIENT STATE)"
+  fi
+
+  echo ""
+done
+
+echo "========================================"
+echo "Test complete."

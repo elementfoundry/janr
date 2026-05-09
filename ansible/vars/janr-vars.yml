@@ -1,0 +1,104 @@
+# -----------------------------
+# Base system
+# -----------------------------
+unused_services:
+  - wpa_supplicant
+  - hostapd
+  - systemd-resolved
+
+router_packages:
+  - systemd
+  - iproute2
+  - nftables
+  - dnsutils
+  - curl
+  - wget
+  - vim
+  - tcpdump
+  - bridge-utils
+  - ethtool
+  - rfkill
+  - hostapd
+  - iw
+  - wireless-tools
+  - dnsmasq
+  - iperf3
+  - traceroute
+  - iputils-ping
+  - htop
+  - kmod
+  - conntrack
+  - unbound
+  - unbound-anchor
+
+# -----------------------------
+# Global
+# -----------------------------
+country_code: US
+wan_interface: enx00e04c681aa4
+
+upstream_ipv4_dns_servers:
+  - 1.1.1.1
+  - 9.9.9.9
+
+dhcp_lease_time: 12h
+
+trusted_subnets:
+  - ip: 10.10.0.0
+    cidr: 24
+    name: ap_lan
+
+  - ip: 192.168.0.0
+    cidr: 24
+    name: upstream_lan
+   
+dns_ip: 10.10.0.1 
+
+# -----------------------------
+# 5 GHz AP (ACTIVE)
+# -----------------------------
+five_g:
+  enabled: true
+  
+  interface: wlan0
+  ip: 10.10.0.1
+  cidr: 24
+
+  dhcp_start: 10.10.0.100
+  dhcp_end: 10.10.0.150
+
+  ssid: JANR-5G
+  password: 1joshua1
+  channel: 149
+
+# -----------------------------
+# 2.4 GHz AP (FUTURE - unused)
+# -----------------------------
+two_g:
+  enabled: false
+
+  interface: wlx0022f4d9292b
+  ip: 10.10.1.1
+  cidr: 24
+
+  dhcp_start: 10.10.1.100
+  dhcp_end: 10.10.1.150
+
+  ssid: JANR-2G
+  password: 1joshua1
+  channel: 1
+
+# -----------------------------
+# DNS (JANR Resolver Layer)
+# -----------------------------
+
+unbound_enabled: true
+
+unbound_interface: 10.10.0.1
+unbound_loopback: 127.0.0.1
+unbound_port: 53
+
+unbound_lan_subnet: 10.10.0.0/24
+
+unbound_root_hints: /var/lib/unbound/root.hints
+unbound_root_key: /var/lib/unbound/root.key

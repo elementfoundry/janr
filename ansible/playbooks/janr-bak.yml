@@ -1,0 +1,123 @@
+- name: JANR Router Stack (Armbian / networkd / hostapd / nftables)
+  hosts: router
+  vars_files:
+    - ../vars/janr-vars.yml
+  become: yes
+
+  tasks:
+
+  # -----------------------------
+  # Stop, disable, and mask unused services
+  # -----------------------------
+  - name: Stop and disable unused services
+    systemd:
+      name: "{{ item }}"
+      enabled: no
+      masked: yes
+      state: stopped
+    loop: "{{ unused_services }}"
+    ignore_errors: yes
+
+  # -----------------------------
+  # Install base packages
+  # -----------------------------
+  - name: Ensure router base packages are installed
+    apt:
+      name: "{{ router_packages }}"
+      state: present
+      update_cache: yes
+
+  # -----------------------------
+  # Deploy wlan0 AP network config
+  # -----------------------------
+  # merge into a global configuration deployment section
+
+  - name: Deploy wlan0 AP network config
+    template:
+      src: network/wlan0-ap.network.j2
+      dest: /etc/systemd/network/20-wlan0-ap.network
+
+  # move this toward the end of the playbook
+  - name: Restart networkd
+    systemd:
+      name: systemd-networkd
+      state: restarted
+
+  # -----------------------------
+  # Enable ipv4 forwarding
+  # -----------------------------
+  # merge into a global configuration deployment section
+  - name: Enable IP forwarding
+    template:
+      src: system/sysctl-router.conf.j2
+      dest: /etc/sysctl.d/99-router.conf
+
+  # also move this toward the end of the playbook
+  - name: Apply sysctl
+    command: sysctl --system
+
+  # -------------------------------
+  # Deploy nftables config 
+  # -------------------------------
+  # merge into a global configuration deployment section
+  - name: Deploy nftables config
+    template:
+      src: firewall/nftables.conf.j2
+      dest: /etc/nftables.conf
+
+  # also move this toward the end of the playbook
+  - name: Enable nftables
+    systemd:
+      name: nftables
+      enabled: yes
+      state: restarted
+  
+  # -----------------------------
+  # Deploy dnsmasq config
+  # -----------------------------
+  # merge into a global configuration deployment section
+  - name: Deploy dnsmasq config
+    template:
+      src: dns/dnsmasq-ap.conf.j2
+      dest: /etc/dnsmasq.d/ap.conf
+
+  # also move this toward the end of the playbook
+  - name: Enable dnsmasq
+    systemd:
+      name: dnsmasq
+      enabled: yes
+      state: restarted
+
+  # -----------------------------
+  # Deploy hostapd config
+  # ----------------------------- 
+  # merge into a global configuration deployment section
+  - name: Deploy hostapd config
+    template:
+      src: ap/hostapd-5g.conf.j2
+      dest: /etc/hostapd/hostapd-5g.conf
+
+  - name: Point hostapd to config
+    lineinfile:
+      path: /etc/default/hostapd
+      regexp: '^DAEMON_CONF='
+      line: 'DAEMON_CONF="/etc/hostapd/hostapd.conf"'
+  
+  # -----------------------------
+  # hostapd service (custom)
+  # -----------------------------
+  - name: Deploy hostapd 5G service
+    template:
+      src: services/hostapd-5g.service.j2
+      dest: /etc/systemd/system/hostapd-5g.service
+      mode: "0644"
+
+  - name: Reload systemd
+    systemd:
+      daemon_reload: yes
+
+  - name: Enable and start hostapd 5G service
+    systemd:
+      name: hostapd-5g.service
+      enabled: yes
+      state: started

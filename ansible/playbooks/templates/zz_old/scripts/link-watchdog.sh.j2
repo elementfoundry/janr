@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+IF="{{ wan_interface }}"
+LOGFILE="{{ link_watchdog_logfile }}"
+
+show_help() {
+echo ""
+echo "Link Watchdog for $IF"
+echo ""
+echo "Checks Ethernet link speed and resets interface if it drops below 1000Mb/s."
+echo ""
+echo "Logs:"
+echo "  - Custom log: $LOGFILE"
+echo "  - System log: journalctl -t link-watchdog"
+echo ""
+echo "Usage:"
+echo "  $0        Run check once"
+echo "  $0 -h     Show this help message"
+echo ""
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+show_help
+exit 0
+fi
+
+mkdir -p /var/log
+touch "$LOGFILE"
+
+log() {
+local MSG="$1"
+local TS
+TS=$(date '+%Y-%m-%d %H:%M:%S')
+echo "$TS [$IF] $MSG" >> "$LOGFILE"
+logger -t link-watchdog "[$IF] $MSG"
+}
+
+# Ensure interface exists
+
+if ! ip link show "$IF" >/dev/null 2>&1; then
+log "Interface not found"
+exit 1
+fi
+
+SPEED=$(ethtool "$IF" 2>/dev/null | awk -F': ' '/Speed/ {print $2}')
+CARRIER=$(cat /sys/class/net/"$IF"/carrier 2>/dev/null)
+
+# Only act on clearly bad states
+
+if [[ "$CARRIER" != "1" || "$SPEED" == "100Mb/s" ]]; then
+log "Detected degraded link (speed=$SPEED, carrier=$CARRIER) — resetting interface"
+
+ip link set "$IF" down
+sleep 2
+
+# Force fresh autonegotiation (critical for USB NICs)
+
+ethtool -s "$IF" autoneg off
+sleep 1
+ethtool -s "$IF" autoneg on advertise 0x020
+
+ip link set "$IF" up
+
+log "Reset complete — deferring verification to next run"
+fi

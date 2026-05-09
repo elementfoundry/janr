@@ -30,7 +30,8 @@ $RECYCLE.BIN/
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[]
+Icon[
+]
 
 # Thumbnails
 ._*
@@ -93,3 +94,6 @@ result-*
 # Built Visual Studio Code Extensions
 *.vsix
 
+hosts.ini
+compare
+compare/*

@@ -1,0 +1,63 @@
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0;
+        policy drop;
+
+        iif lo accept
+
+        ct state established,related accept
+        ct state invalid drop
+
+        # ----------------------------------------
+        # Trusted subnets (explicit list)
+        # ----------------------------------------
+        {% for net in trusted_subnets %}
+        ip saddr {{ net.ip }}/{{ net.cidr }} tcp dport 22 accept
+        ip saddr {{ net.ip }}/{{ net.cidr }} icmp type echo-request accept
+        ip saddr {{ net.ip }}/{{ net.cidr }} udp dport 53 accept
+        ip saddr {{ net.ip }}/{{ net.cidr }} udp dport 5353 accept
+        {% endfor %}
+
+        # DHCP (LAN only, usually safe globally on router)
+        udp dport 67 accept
+
+        # mdns
+        udp dport mdns ip daddr 224.0.0.251 accept 
+    }
+
+
+    chain forward {
+        type filter hook forward priority 0;
+        policy drop;
+
+        ct state invalid drop
+        ct state established,related accept
+
+        # LAN → WAN forwarding (Ethernet + WiFi LANs)
+        {% for net in trusted_subnets %}
+        ip saddr {{ net.ip }}/{{ net.cidr }} oifname {{ wan_interface }} accept
+        {% endfor %}
+    }
+
+
+    chain output {
+        type filter hook output priority 0;
+        policy accept;
+    }
+}
+
+
+table ip nat {
+
+    chain postrouting {
+        type nat hook postrouting priority srcnat;
+        policy accept;
+
+        # NAT LAN → WAN
+        {% for net in trusted_subnets %}
+        ip saddr {{ net.ip }}/{{ net.cidr }} oifname {{ wan_interface }} masquerade
+        {% endfor %}
+    }
+}

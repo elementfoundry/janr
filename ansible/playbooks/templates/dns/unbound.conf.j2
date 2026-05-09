@@ -1,0 +1,34 @@
+server:
+    interface: {{ unbound_loopback }}
+    interface: {{ unbound_interface }}
+    port: {{ unbound_port }}
+
+    access-control: 127.0.0.0/8 allow
+    access-control: {{ unbound_lan_subnet }} allow
+
+    verbosity: 1
+
+    username: "unbound"
+    directory: "/etc/unbound"
+
+    hide-identity: yes
+    hide-version: yes
+
+    qname-minimisation: yes
+    harden-glue: yes
+    harden-dnssec-stripped: yes
+
+    prefetch: yes
+
+    statistics-cumulative: yes
+    extended-statistics: yes
+
+    cache-min-ttl: 300
+    cache-max-ttl: 86400
+
+    edns-buffer-size: 1232
+
+    do-ip4: yes
+    do-ip6: yes
+
+    root-hints: "{{ unbound_root_hints }}"

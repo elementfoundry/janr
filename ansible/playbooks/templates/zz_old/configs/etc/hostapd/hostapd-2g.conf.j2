@@ -1,0 +1,18 @@
+interface={{ two_g_lan_interface }}
+driver=nl80211
+
+ssid={{ two_g_ssid }}
+hw_mode=g
+channel={{ two_g_wifi_channel }}
+
+wmm_enabled=1
+ieee80211n=1
+
+# 🔴 CRITICAL FIX: disable HT40
+ht_capab=[HT20]
+
+auth_algs=1
+wpa=2
+wpa_passphrase={{ two_g_wifi_password }}
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP

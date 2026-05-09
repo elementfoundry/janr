@@ -1,0 +1,8 @@
+[Unit]
+Description=Ethernet Link Watchdog (Gigabit Enforcement)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/link-watchdog
