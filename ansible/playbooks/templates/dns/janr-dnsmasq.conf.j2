@@ -1,0 +1,14 @@
+interface={{ bridge.name }}
+bind-interfaces
+
+# Disable dnsmasq DNS listener
+port=0
+
+# DHCP pool
+dhcp-range={{ dhcp.start }},{{ dhcp.end }},{{ dhcp.lease_time }}
+
+# Gateway
+dhcp-option=option:router,{{ dhcp.gateway }}
+
+# Advertise JANR/Unbound as DNS
+dhcp-option=option:dns-server,{{ dhcp.server }}

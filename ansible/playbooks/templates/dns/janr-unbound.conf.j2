@@ -1,0 +1,36 @@
+server:
+    {% for interface in unbound.interfaces %}
+    interface: {{ interface.ip }}
+    {% endfor %}
+    port: {{ unbound.port }}
+
+    {% for access_control in unbound.access_controls %}
+    access-control: {{ access_control.ip }}/{{ access_control.cidr }} allow
+    {% endfor %}
+
+    verbosity: 1
+
+    username: "{{ unbound.username }}"
+    directory: "{{ unbound.directory }}"
+
+    hide-identity: yes
+    hide-version: yes
+
+    qname-minimisation: yes
+    harden-glue: yes
+    harden-dnssec-stripped: yes
+
+    prefetch: yes
+
+    statistics-cumulative: yes
+    extended-statistics: yes
+
+    cache-min-ttl: {{ unbound.cache.min_ttl }}
+    cache-max-ttl: {{ unbound.cache.max_ttl }}
+
+    edns-buffer-size: 1232
+
+    do-ip4: yes
+    do-ip6: yes
+
+    root-hints: "{{ unbound.root_hints }}"

@@ -38,12 +38,6 @@ router_packages:
 country_code: US
 wan_interface: enx00e04c681aa4
 
-upstream_ipv4_dns_servers:
-  - 1.1.1.1
-  - 9.9.9.9
-
-dhcp_lease_time: 12h
-
 trusted_subnets:
   - ip: 10.10.0.0
     cidr: 24
@@ -52,54 +46,62 @@ trusted_subnets:
   - ip: 192.168.0.0
     cidr: 24
     name: upstream_lan
+
+bridge:
+  name: br0
+
+dhcp:
+  start: 10.10.0.100
+  end: 10.10.0.150
+  lease_time: 12h
+  gateway: 10.10.0.1
+  server: 10.10.0.1
    
-dns_ip: 10.10.0.1 
+access_points:
+  - name: five_g
+    description: 5 GHz AP (ACTIVE)
+    enabled: true
+    interface: wlan0
+    ip: 10.10.0.1
+    cidr: 24
+    ssid: JANR-5G
+    password: 1joshua1
+    channel: 149
+    band: 5GHz
 
-# -----------------------------
-# 5 GHz AP (ACTIVE)
-# -----------------------------
-five_g:
-  enabled: true
-  
-  interface: wlan0
-  ip: 10.10.0.1
-  cidr: 24
+  - name: two_g
+    description: 2.4 GHz AP (FUTURE - unused)
+    enabled: false
+    interface: wlx0022f4d9292b
+    ip: 10.10.0.2
+    cidr: 24
+    ssid: JANR-2G
+    password: 1joshua1
+    channel: 1
+    band: 2.4GHz
 
-  dhcp_start: 10.10.0.100
-  dhcp_end: 10.10.0.150
+unbound:
+  username: unbound
+  directory: /etc/unbound
 
-  ssid: JANR-5G
-  password: 1joshua1
-  channel: 149
+  interfaces:
+    - ip: 127.0.0.1
+    - ip: 10.10.0.1
+    - ip: ::1
 
-# -----------------------------
-# 2.4 GHz AP (FUTURE - unused)
-# -----------------------------
-two_g:
-  enabled: false
+  access_controls:
+    - ip: 127.0.0.0
+      cidr: 8
+    - ip: 10.10.0.0
+      cidr: 24
+    - ip: ::1
+      cidr: 128
 
-  interface: wlx0022f4d9292b
-  ip: 10.10.1.1
-  cidr: 24
+  port: 53
 
-  dhcp_start: 10.10.1.100
-  dhcp_end: 10.10.1.150
+  root_hints: /var/lib/unbound/root.hints
+  root_key: /var/lib/unbound/root.key
 
-  ssid: JANR-2G
-  password: 1joshua1
-  channel: 1
-
-# -----------------------------
-# DNS (JANR Resolver Layer)
-# -----------------------------
-
-unbound_enabled: true
-
-unbound_interface: 10.10.0.1
-unbound_loopback: 127.0.0.1
-unbound_port: 53
-
-unbound_lan_subnet: 10.10.0.0/24
-
-unbound_root_hints: /var/lib/unbound/root.hints
-unbound_root_key: /var/lib/unbound/root.key
+  cache:
+    min_ttl: 300
+    max_ttl: 86400

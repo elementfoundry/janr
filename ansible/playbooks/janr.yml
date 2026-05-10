@@ -135,8 +135,8 @@
 
   - name: Deploy unbound config
     template:
-      src: dns/unbound.conf.j2
-      dest: /etc/unbound/unbound.conf.d/janr.conf
+      src: dns/janr-unbound.conf.j2
+      dest: /etc/unbound/unbound.conf.d/janr-unbound.conf
 
 
   # =========================================================
@@ -153,8 +153,8 @@
   # =========================================================
   - name: Deploy dnsmasq config
     template:
-      src: dns/dnsmasq-ap.conf.j2
-      dest: /etc/dnsmasq.d/ap.conf
+      src: dns/janr-dnsmasq.conf.j2
+      dest: /etc/dnsmasq.d/janr-dnsmasq.conf
 
 
   # =========================================================
