@@ -49,6 +49,9 @@ trusted_subnets:
 
 bridge:
   name: br0
+  ip: 10.10.0.1
+  cidr: 24
+
 
 dhcp:
   start: 10.10.0.100
