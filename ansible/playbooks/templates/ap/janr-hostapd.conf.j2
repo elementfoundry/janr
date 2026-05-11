@@ -1,16 +1,16 @@
-interface=wlan0
-bridge=br0
+interface={{ access_points[0].interface }}
+bridge={{ bridge.name }}
 driver=nl80211
 
 ctrl_interface=/run/hostapd
 ctrl_interface_group=0
 
-ssid=JANR-5G
-country_code=US
+ssid={{ access_points[0].ssid }}
+country_code={{ country_code }}
 ieee80211d=1
 
 hw_mode=a
-channel=149
+channel={{ access_points[0].channel }}
 
 ieee80211n=1
 ieee80211ac=1
@@ -28,6 +28,6 @@ beacon_int=100
 
 auth_algs=1
 wpa=2
-wpa_passphrase=1joshua1
+wpa_passphrase={{ access_points[0].password }}
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP

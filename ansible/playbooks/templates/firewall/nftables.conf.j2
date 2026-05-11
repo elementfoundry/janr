@@ -10,6 +10,19 @@ table inet filter {
         ct state established,related accept
         ct state invalid drop
 
+        icmpv6 type {
+            destination-unreachable,
+            packet-too-big,
+            time-exceeded,
+            parameter-problem,
+            echo-request,
+            echo-reply,
+            nd-neighbor-solicit,
+            nd-neighbor-advert,
+            nd-router-solicit,
+            nd-router-advert
+        } accept
+        
         # ----------------------------------------
         # Trusted subnets (explicit list)
         # ----------------------------------------

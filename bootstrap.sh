@@ -32,24 +32,24 @@ echo "========================================="
 OLD_HOSTNAME="$(hostname)"
 
 echo
-echo "[0/7] Current hostname detected: ${OLD_HOSTNAME}"
-echo "[1/7] Updating package lists..."
+echo "[0/8] Current hostname detected: ${OLD_HOSTNAME}"
+echo "[1/8] Updating package lists..."
 sudo apt update
 
 echo
-echo "[2/7] Upgrading system..."
+echo "[2/8] Upgrading system..."
 sudo apt upgrade -y
 
 echo
-echo "[3/7] Installing packages..."
+echo "[3/8] Installing packages..."
 sudo apt install -y python3-apt vim avahi-daemon
 
 echo
-echo "[4/7] Setting hostname to ${NEW_HOSTNAME}..."
+echo "[4/8] Setting hostname to ${NEW_HOSTNAME}..."
 sudo hostnamectl set-hostname "${NEW_HOSTNAME}"
 
 echo
-echo "[5/7] Updating /etc/hosts (replacing ${OLD_HOSTNAME} → ${NEW_HOSTNAME})..."
+echo "[5/8] Updating /etc/hosts (replacing ${OLD_HOSTNAME} → ${NEW_HOSTNAME})..."
 
 # Replace any occurrence of old hostname in /etc/hosts
 if grep -q "${OLD_HOSTNAME}" /etc/hosts; then
@@ -66,11 +66,15 @@ if ! grep -q "^127.0.1.1" /etc/hosts; then
 fi
 
 echo
-echo "[6/7] Enabling Avahi..."
+echo "[6/8] Enabling Avahi..."
 sudo systemctl enable --now avahi-daemon
 
 echo
-echo "[7/7] Done."
+echo "[7/8] Fixing Ping..."
+sudo setcap cap_net_raw+ep /usr/bin/ping
+
+echo
+echo "[8/8] Done."
 
 echo
 echo "========================================="

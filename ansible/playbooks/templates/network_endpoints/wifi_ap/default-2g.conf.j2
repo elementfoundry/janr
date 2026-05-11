@@ -1,0 +1,28 @@
+# ==============================================================
+# Default 2g wifi AP config template. This is used as a fallback 
+# if no custom config is provided for the 2g AP.
+# ==============================================================
+
+interface={{ item.interface }}
+bridge={{ item.bridge }}
+ssid={{ item.ssid }}
+channel={{ item.channel }}
+wpa_passphrase={{ item.password }}
+country_code={{ country_code }}
+ignore_broadcast_ssid={{ item.hide_ssid | int}}
+
+driver=nl80211
+
+ctrl_interface=/run/hostapd
+ctrl_interface_group=0
+
+auth_algs=1
+wpa_key_mgmt=WPA-PSK
+beacon_int=100
+hw_mode=g
+ieee80211n=1
+wpa=2
+wpa_pairwise=CCMP
+
+wmm_enabled=1
+ht_capab=[HT20][SHORT-GI-20]

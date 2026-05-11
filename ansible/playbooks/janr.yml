@@ -73,25 +73,40 @@
   # =========================================================
   # 5. NETWORK CONFIGURATION
   # =========================================================
+  
   - name: Deploy bridge netdev
     template:
-      src: network/00-janr-br0.netdev.j2
-      dest: /etc/systemd/network/00-janr-br0.netdev
+      src: network/bridge/br0.netdev.j2
+      dest: /etc/systemd/network/00-janr-bridge-br0.netdev
 
-  - name: Deploy bridge network config
+  - name: Deploy bridge network
     template:
-      src: network/00-janr-br0.network.j2
-      dest: /etc/systemd/network/00-janr-br0.network
+      src: network/bridge/br0.network.j2
+      dest: /etc/systemd/network/00-janr-bridge-br0.network
 
-  - name: Deploy WAN interface config
+  - name: Deploy WAN network config
     template:
-      src: network/10-janr-wan.network.j2
-      dest: /etc/systemd/network/10-janr-wan.network
+      src: network/wan/uplink.network.j2
+      dest: "/etc/systemd/network/10-janr-wan-{{ wan_interface }}.network"
 
-  - name: Deploy wlan0 AP network config
+  - name: Deploy systemd-networkd config per endpoint
     template:
-      src: network/20-janr-wlan0-ap.network.j2
-      dest: /etc/systemd/network/20-janr-wlan0-ap.network
+      src: >-
+        {{
+          item.template_override_network
+          | default(
+              'network/endpoints/' ~ item.type ~ '.network.j2',
+              true
+            )
+        }}
+      dest: "/etc/systemd/network/20-janr-{{ item.name }}-{{ item.interface }}.network"
+    loop: "{{ network_endpoints }}"
+    when: item.enabled
+
+  # - name: Deploy wlan0 AP network config
+  #   template:
+  #     src: network/20-janr-wlan0-ap.network.j2
+  #     dest: /etc/systemd/network/20-janr-wlan0-ap.network
 
 
   # =========================================================
@@ -160,12 +175,28 @@
   # =========================================================
   # 10. HOSTAPD
   # =========================================================
-  - name: Deploy hostapd config (5G)
+  # - name: Deploy hostapd config (5G)
+  #   template:
+  #     src: ap/janr-hostapd.conf.j2
+  #     dest: /etc/hostapd/janr-hostapd.conf
+
+  # new architecture - deploy per-endpoint configs
+  - name: Deploy hostapd config per wifi_ap endpoint
     template:
-      src: ap/janr-hostapd.conf.j2
-      dest: /etc/hostapd/janr-hostapd.conf
-
-
+      src: >-
+        {{
+          item.template_override
+          | default(
+              'network_endpoints/wifi_ap/default-' ~ item.band ~ '.conf.j2',
+              true
+            )
+        }}
+      dest: "/etc/hostapd/janr-{{ item.name }}-{{ item.interface }}.conf"
+    loop: "{{ network_endpoints }}"
+    when:
+      - item.enabled
+      - item.type == "wifi_ap"
+  
   # =========================================================
   # 11. FIREWALL
   # =========================================================
@@ -197,8 +228,8 @@
   # =========================================================
   - name: Deploy hostapd service
     template:
-      src: services/janr-hostapd.service.j2
-      dest: /etc/systemd/system/janr-hostapd.service
+      src: services/janr-hostapd@.service.j2
+      dest: /etc/systemd/system/janr-hostapd@.service
 
   - name: Deploy unbound service
     template:
@@ -389,8 +420,18 @@
   # =========================================================
   # 23. AP START LAST
   # =========================================================
-  - name: Start hostapd
+  # - name: Start hostapd
+  #   systemd:
+  #     name: janr-hostapd.service
+  #     enabled: true
+  #     state: started
+  - name: Enable hostapd service per wifi_ap endpoint
     systemd:
-      name: janr-hostapd.service
+      name: "janr-hostapd@janr-{{ item.name }}-{{ item.interface }}"
       enabled: true
       state: started
+      daemon_reload: true
+    loop: "{{ network_endpoints }}"
+    when:
+      - item.enabled
+      - item.type == "wifi_ap"

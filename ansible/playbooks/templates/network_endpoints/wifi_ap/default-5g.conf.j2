@@ -1,0 +1,44 @@
+# ==============================================================
+# Default 5g wifi AP config template. This is used as a fallback 
+# if no custom config is provided for the 5g AP.
+# ==============================================================
+
+interface={{ item.interface }}
+bridge={{ item.bridge }}
+driver=nl80211
+
+ctrl_interface=/run/hostapd
+ctrl_interface_group=0
+
+ssid={{ item.ssid }}
+country_code={{ country_code }}
+ieee80211d=1
+
+hw_mode=a
+channel={{ item.channel }}
+
+ieee80211n=1
+ieee80211ac=1
+wmm_enabled=1
+
+# HT (802.11n)
+ht_capab=[HT40+][SHORT-GI-20][SHORT-GI-40]
+
+# VHT (802.11ac)
+vht_capab=[SHORT-GI-80][RXLDPC][MAX-MPDU-7991]
+vht_oper_chwidth=1
+
+# NOTE:
+# vht_oper_centr_freq_seg0_idx is typically channel-dependent.
+# You may want to compute this later or parameterize it per endpoint.
+vht_oper_centr_freq_seg0_idx=155
+
+beacon_int=100
+
+auth_algs=1
+wpa=2
+wpa_passphrase={{ item.password }}
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+ignore_broadcast_ssid={{ item.hide_ssid | int}}
+

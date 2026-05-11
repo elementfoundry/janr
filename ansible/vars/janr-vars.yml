@@ -52,36 +52,60 @@ bridge:
   ip: 10.10.0.1
   cidr: 24
 
-
 dhcp:
   start: 10.10.0.100
   end: 10.10.0.150
   lease_time: 12h
   gateway: 10.10.0.1
   server: 10.10.0.1
-   
-access_points:
+
+# access_points:
+#   - name: five_g
+#     description: 5 GHz AP (ACTIVE)
+#     enabled: true
+#     interface: wlan0
+#     ip: 10.10.0.1
+#     cidr: 24
+#     ssid: JANR-5G
+#     password: 1joshua1
+#     channel: 149
+#     band: 5GHz
+
+#   - name: two_g
+#     description: 2.4 GHz AP (FUTURE - unused)
+#     enabled: false
+#     interface: wlx0022f4d9292b
+#     ip: 10.10.0.2
+#     cidr: 24
+#     ssid: JANR-2G
+#     password: 1joshua1
+#     channel: 1
+#     band: 2.4GHz
+
+network_endpoints:
   - name: five_g
-    description: 5 GHz AP (ACTIVE)
+    type: wifi_ap
     enabled: true
     interface: wlan0
-    ip: 10.10.0.1
-    cidr: 24
+    bridge: br0
     ssid: JANR-5G
     password: 1joshua1
     channel: 149
-    band: 5GHz
+    band: 5g
+    template_override: null
+    hide_ssid: false
 
   - name: two_g
-    description: 2.4 GHz AP (FUTURE - unused)
-    enabled: false
+    type: wifi_ap
+    enabled: true
     interface: wlx0022f4d9292b
-    ip: 10.10.0.2
-    cidr: 24
+    bridge: br0
     ssid: JANR-2G
     password: 1joshua1
     channel: 1
-    band: 2.4GHz
+    band: 2g
+    template_override: null
+    hide_ssid: true
 
 unbound:
   username: unbound
