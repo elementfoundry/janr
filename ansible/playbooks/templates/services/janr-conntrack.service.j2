@@ -1,0 +1,23 @@
+        [Unit]
+        Description=JANR Conntrack WAN Visibility Layer
+        Requires=systemd-networkd.service
+        After=systemd-networkd.service
+        After=network-online.target
+        Wants=network-online.target
+
+        [Service]
+        #RuntimeDirectory=janr/log
+        #RuntimeDirectoryMode=0755
+
+        ExecStart=/usr/sbin/conntrack -E -o timestamp,extended
+        StandardOutput=append:/run/janr/log/firewall.log
+        StandardError=journal
+
+        CPUQuota=10%
+        Nice=10
+
+        Restart=always
+        RestartSec=2
+
+        [Install]
+        WantedBy=multi-user.target

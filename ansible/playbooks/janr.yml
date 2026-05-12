@@ -69,6 +69,17 @@
     command: setcap cap_net_raw+ep /usr/bin/ping
     changed_when: false
 
+  # =========================================================
+  # 5. Deploy /etc/tmpfiles.d
+  # =========================================================
+  - name: Deploy /etc/tmpfiles.d
+    template:
+      src: tmp/janr.conf.j2
+      dest: /etc/tmpfiles.d/janr.conf
+
+  - name: Apply JANR systemd tmpfiles
+    command: systemd-tmpfiles --create /etc/tmpfiles.d/janr.conf
+    changed_when: false
 
   # =========================================================
   # 5. NETWORK CONFIGURATION
@@ -245,12 +256,6 @@
   # =========================================================
   # 14. LOGGING
   # =========================================================
-  - name: Ensure runtime log directory exists
-    file:
-      path: /run/janr/log
-      state: directory
-      mode: "0755"
-
   - name: Ensure persistent log directory exists
     file:
       path: /var/log/janr
@@ -268,34 +273,10 @@
   # =========================================================
   # 15. CONNTRACK SERVICE
   # =========================================================
-  - name: Install JANR conntrack service
-    copy:
+  - name: Deploy JANR conntrack service
+    template:
+      src: services/janr-conntrack.service.j2
       dest: /etc/systemd/system/janr-conntrack.service
-      mode: "0644"
-      content: |
-        [Unit]
-        Description=JANR Conntrack WAN Visibility Layer
-        Requires=systemd-networkd.service
-        After=systemd-networkd.service
-        After=network-online.target
-        Wants=network-online.target
-
-        [Service]
-        RuntimeDirectory=janr/log
-        RuntimeDirectoryMode=0755
-
-        ExecStart=/usr/sbin/conntrack -E -o timestamp,extended
-        StandardOutput=append:/run/janr/log/firewall.log
-        StandardError=journal
-
-        CPUQuota=10%
-        Nice=10
-
-        Restart=always
-        RestartSec=2
-
-        [Install]
-        WantedBy=multi-user.target
 
 
   # =========================================================
@@ -420,11 +401,6 @@
   # =========================================================
   # 23. AP START LAST
   # =========================================================
-  # - name: Start hostapd
-  #   systemd:
-  #     name: janr-hostapd.service
-  #     enabled: true
-  #     state: started
   - name: Enable hostapd service per wifi_ap endpoint
     systemd:
       name: "janr-hostapd@janr-{{ item.name }}-{{ item.interface }}"
