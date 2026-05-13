@@ -1,8 +1,0 @@
-/var/log/link-watchdog.log {
-    daily
-    rotate {{ watchdog_log_rotate_count | default(7) }}
-    compress
-    missingok
-    notifempty
-    copytruncate
-}
