@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ACTION="${1:-}"
+TARGET="${2:-}"
+
+ANSIBLE_DIR="ansible"
+PLAYBOOK_DIR="$ANSIBLE_DIR/playbooks"
+
+usage() {
+    cat <<EOF
+JANR deployment helper
+
+Usage:
+  ./janr <action> <target>
+
+Actions:
+  deploy          Run full deployment
+  dry-run         Run Ansible check mode with diff
+  check-syntax    Run Ansible syntax validation
+
+Targets:
+  router          Deploy router role
+  api             Deploy API role
+  ui              Deploy UI role
+  all             Deploy all roles via site.yml
+
+Examples:
+  ./janr deploy router
+  ./janr dry-run all
+  ./janr check-syntax api
+
+EOF
+}
+
+if [[ "$ACTION" == "-h" || "$ACTION" == "--help" || -z "$ACTION" ]]; then
+    usage
+    exit 0
+fi
+
+if [[ -z "$TARGET" ]]; then
+    echo "[JANR] Missing target."
+    echo
+    usage
+    exit 1
+fi
+
+case "$TARGET" in
+    router)
+        PLAYBOOK="router.yml"
+        ;;
+    api)
+        PLAYBOOK="api.yml"
+        ;;
+    ui)
+        PLAYBOOK="ui.yml"
+        ;;
+    all)
+        PLAYBOOK="site.yml"
+        ;;
+    *)
+        echo "[JANR] Invalid target: $TARGET"
+        exit 1
+        ;;
+esac
+
+cd "$ANSIBLE_DIR"
+
+case "$ACTION" in
+    deploy)
+        echo "[JANR] Deploying $TARGET..."
+        ansible-playbook "playbooks/$PLAYBOOK" -vv
+        ;;
+    dry-run)
+        echo "[JANR] Running dry-run for $TARGET..."
+        ansible-playbook \
+            "playbooks/$PLAYBOOK" \
+            -vv \
+            --check \
+            --diff
+        ;;
+    check-syntax)
+        echo "[JANR] Syntax checking $TARGET..."
+        ansible-playbook \
+            "playbooks/$PLAYBOOK" \
+            --syntax-check
+        ;;
+    *)
+        echo "[JANR] Invalid action: $ACTION"
+        echo
+        usage
+        exit 1
+        ;;
+esac
