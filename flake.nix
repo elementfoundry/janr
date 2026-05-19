@@ -29,6 +29,15 @@
       shellHook = ''
         export PATH="${pkgs.lib.makeBinPath janrTools}"
 
+        export VENV_DIR=.venv
+ 
+        if [ ! -d "$VENV_DIR" ]; then
+          echo "Creating virtualenv..."
+          python -m venv $VENV_DIR
+        fi
+ 
+        source $VENV_DIR/bin/activate
+
         # Remove common impurity vectors
         unset LD_LIBRARY_PATH
         unset PYTHONPATH
