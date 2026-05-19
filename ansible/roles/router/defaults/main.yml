@@ -59,29 +59,6 @@ dhcp:
   gateway: 10.10.0.1
   server: 10.10.0.1
 
-# access_points:
-#   - name: five_g
-#     description: 5 GHz AP (ACTIVE)
-#     enabled: true
-#     interface: wlan0
-#     ip: 10.10.0.1
-#     cidr: 24
-#     ssid: JANR-5G
-#     password: 1joshua1
-#     channel: 149
-#     band: 5GHz
-
-#   - name: two_g
-#     description: 2.4 GHz AP (FUTURE - unused)
-#     enabled: false
-#     interface: wlx0022f4d9292b
-#     ip: 10.10.0.2
-#     cidr: 24
-#     ssid: JANR-2G
-#     password: 1joshua1
-#     channel: 1
-#     band: 2.4GHz
-
 network_endpoints:
   - name: five_g
     type: wifi_ap
@@ -105,7 +82,7 @@ network_endpoints:
     channel: 1
     band: 2g
     template_override: null
-    hide_ssid: true
+    hide_ssid: false
 
 unbound:
   username: unbound
