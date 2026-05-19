@@ -1,3 +1,2 @@
 - import_playbook: router.yml
-# - import_playbook: api.yml
-# - import_playbook: ui.yml
+- import_playbook: ui.yml

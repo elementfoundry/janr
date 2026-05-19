@@ -1,0 +1,46 @@
+# =========================================================
+# 1. BASE PACKAGES
+# =========================================================
+- name: Ensure ui base packages are installed
+  apt:
+    name: "{{ ui_packages }}"
+    state: present
+    update_cache: yes
+
+# =========================================================
+# 2. DEPLOY UI PYTHON COMPONENTS
+# =========================================================
+- name: Ensure clean slate for JANR UI
+  file:
+    path: /opt/janr/ui
+    state: absent
+  failed_when: false
+
+- name: Create/Recreate JANR UI directory
+  file:
+    path: /opt/janr/ui
+    state: directory
+    mode: "0755"
+
+- name: Copy UI src into /opt/janr/ui
+  copy:
+    src: src/
+    dest: /opt/janr/ui/
+    mode: preserve
+
+- name: Ensure dashboard is executable
+  file:
+    path: /opt/janr/ui/dashboard.py
+    mode: "0755"
+
+# =========================================================
+# 3. CREATE LAUNCHER
+# =========================================================
+- name: Install janr-dashboard system-wide command
+  become: true
+  copy:
+    dest: /usr/local/bin/janr-dashboard
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      exec /opt/janr/ui/dashboard.py "$@"

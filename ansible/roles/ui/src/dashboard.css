@@ -1,0 +1,156 @@
+Screen {
+    layout: vertical;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+HeaderBar {
+    height: 2;
+    width: 100%;
+    layout: horizontal;
+
+    background: #222222;
+    color: #ffb000;
+
+    border-bottom: heavy #555555;
+}
+
+#header-left {
+    width: 1fr;
+    content-align: left middle;
+    padding-left: 1;
+}
+
+#header-center {
+    width: 20;
+    content-align: center middle;
+}
+
+#header-right {
+    width: 1fr;
+    content-align: right middle;
+    padding-right: 1;
+}
+
+/* =========================================================
+   TABS LAYOUT FIX
+   (prevents scrollbar weirdness + ensures full height fill)
+   ========================================================= */
+
+TabbedContent {
+    height: 1fr;
+}
+
+TabPane {
+    height: 1fr;
+    padding: 1;
+}
+
+/* active tab styling (optional polish) */
+TabbedContent > TabList {
+    background: #1a1a1a;
+    color: #888888;
+}
+
+TabbedContent Tab {
+    background: #1a1a1a;
+}
+
+TabbedContent Tab.-active {
+    background: #222222;
+    color: #ffb000;
+}
+
+/* =========================================================
+   LOG VIEWER
+   ========================================================= */
+
+#live-log {
+    width: 100%;
+    height: 100%;
+}
+
+/* terminal feel for Log widget */
+Log {
+    background: #111111;
+    color: #d0d0d0;
+
+    scrollbar-background: #1a1a1a;
+    scrollbar-color: #555555;
+}
+
+RichLog {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* =========================================================
+   FOOTER (default polish)
+   ========================================================= */
+
+Footer {
+    background: #1a1a1a;
+    color: #777777;
+}
+
+/* =========================================================
+   Data Table
+   ========================================================= */
+
+DataTable {
+    background: #0f141b;
+    color: #d0d0d0;
+
+    border: heavy #2b2f36;
+}
+
+/* header row */
+DataTable > .datatable--header {
+    background: #1a1f2a;
+    color: #c0c0c0;
+}
+
+DataTable:focus > .datatable--header {
+    background: #1a1f2a;
+    color: #c0c0c0;
+}
+
+/* rows */
+DataTable > .datatable--row {
+    background: #0f141b;
+}
+
+/* zebra stripe */
+DataTable.--even {
+    background: #0d1218;
+}
+
+/* ✅ selected row (FIXED) */
+DataTable .datatable--cursor {
+    background: #2b3a4a;
+    color: #ffffff;
+}
+
+#overview-grid {
+    layout: grid;
+    grid-size: 2 2;
+    grid-columns: 1fr 1fr;
+    grid-rows: auto auto;
+    grid-gutter: 1;
+}
+
+CpuPanel,
+MemoryPanel,
+StoragePanel,
+EndpointPanel {
+    border: round #ffcc66;
+    height: auto;
+}
+
+#about-footer {
+    height: 5;
+    border-top: solid #444444;
+    content-align: center middle;
+}

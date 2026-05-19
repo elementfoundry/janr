@@ -1,0 +1,3 @@
+ui_packages:
+  - python3-psutil
+  - python3-blessed
