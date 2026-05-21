@@ -1,6 +1,7 @@
 from textual.widgets import Static
 from textual.reactive import reactive
-import psutil, time
+import psutil
+import time
 
 
 class UptimeWidget(Static):
@@ -20,6 +21,10 @@ class UptimeWidget(Static):
 
         self.uptime = (
             f"{d}d {h:02}:{m:02}:{s:02}"
-            if d else
-            f"{h:02}:{m:02}:{s:02}"
+            if d
+            else f"{h:02}:{m:02}:{s:02}"
         )
+
+    def watch_uptime(self, uptime: str) -> None:
+        self.update(uptime)
+        
