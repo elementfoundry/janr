@@ -49,8 +49,8 @@ case "$TARGET" in
     router)
         PLAYBOOK="router.yml"
         ;;
-    api)
-        PLAYBOOK="api.yml"
+    admin)
+        PLAYBOOK="admin.yml"
         ;;
     ui)
         PLAYBOOK="ui.yml"

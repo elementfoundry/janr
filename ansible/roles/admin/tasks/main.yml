@@ -1,0 +1,16 @@
+- name: Create janr-admin group
+  group:
+    name: janr-admin
+    state: present
+
+- name: Create admin user
+  user:
+    name: "{{ janr_admin_username }}"
+    password: "{{ janr_admin_password }}"
+    groups:
+      - janr-admin
+    append: true
+    shell: /bin/bash
+    create_home: true
+    state: present
+    update_password: on_create

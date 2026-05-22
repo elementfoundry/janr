@@ -1,0 +1,3 @@
+{% for sip in static_ips %}
+dhcp-host={{ sip.mac_addr }},{{ sip.short_name }},{{ sip.ip_addr }}
+{% endfor %}

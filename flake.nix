@@ -69,6 +69,7 @@
         echo "    ./janr check-syntax <target>"
         echo ""
         echo "  Targets:"
+        echo "    admin    -> admin.yml"
         echo "    router   -> router.yml"
         echo "    ui       -> ui.yml"
         echo "    all      -> site.yml"

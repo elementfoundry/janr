@@ -1,0 +1,20 @@
+- name: Configure JANR admin accounts
+  hosts: janr
+  become: true
+
+  vars_prompt:
+    - name: janr_admin_username
+      prompt: "Enter username for JANR admin user"
+      private: false
+      encrypt: false
+      confirm: false
+
+    - name: janr_admin_password
+      prompt: "Enter password for JANR admin user"
+      private: true
+      encrypt: sha512_crypt
+      confirm: true
+    
+
+  roles:
+    - role: admin

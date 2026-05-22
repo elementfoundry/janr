@@ -109,3 +109,19 @@ unbound:
   cache:
     min_ttl: 300
     max_ttl: 86400
+
+static_ips:
+  - short_name: minion
+    mac_addr: 94:e7:0b:50:68:01
+    ip_addr: 10.10.0.13
+    domain_name: minon.home.arpa
+
+  - short_name: u3d
+    mac_addr: 34:c9:3d:61:fa:4e
+    ip_addr: 10.10.0.10
+    domain_name: u3d.home.arpa
+
+  - short_name: k1se
+    mac_addr: fc:ee:28:0a:33:d5
+    ip_addr: 10.10.0.20
+    domain_name: k1se.home.arpa
