@@ -27,6 +27,6 @@ with pkgs; [
 
   # rust tool replacements
   moor
-  exa
+  eza
   bat
 ]
