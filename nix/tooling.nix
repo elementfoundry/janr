@@ -7,7 +7,7 @@ with pkgs; [
   gnugrep
   gnused
   gawk
-
+  
   # shell support
   bashInteractive
 
@@ -21,23 +21,12 @@ with pkgs; [
   python3
   python3Packages.netaddr
 
-  # Networking tools
-  iproute2
-  nftables
-  bind
-
-  # utilities
-  jq
-  yq
-  git
-  inetutils
-
-  # system introspection
-  systemd
-
-  # python 
-  python3
+  # python virtual env
   python3.pkgs.pip
   python3.pkgs.virtualenv
 
+  # rust tool replacements
+  moor
+  exa
+  bat
 ]
