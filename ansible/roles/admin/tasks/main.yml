@@ -14,3 +14,20 @@
     create_home: true
     state: present
     update_password: on_create
+
+- name: Allow janr-admin to manage JANR services
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/janr-admin
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+    content: |
+      Cmnd_Alias JANR_SERVICES = \
+          /bin/systemctl start janr*, \
+          /bin/systemctl stop janr*, \
+          /bin/systemctl restart janr*, \
+          /bin/systemctl reload janr*, \
+          /bin/systemctl status janr*
+
+      %janr-admin ALL=(root) NOPASSWD: JANR_SERVICES

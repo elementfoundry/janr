@@ -20,18 +20,24 @@
   file:
     path: /opt/janr/ui
     state: directory
-    mode: "0755"
+    owner: root
+    group: janr-admin
+    mode: "0750"
 
 - name: Copy UI src into /opt/janr/ui
   copy:
     src: src/
     dest: /opt/janr/ui/
-    mode: preserve
+    owner: root
+    group: janr-admin
+    mode: "0750"
 
 - name: Ensure dashboard is executable
   file:
     path: /opt/janr/ui/dashboard.py
-    mode: "0755"
+    owner: root
+    group: janr-admin
+    mode: "0750"
 
 # =========================================================
 # 3. CREATE LAUNCHER
@@ -40,7 +46,9 @@
   become: true
   copy:
     dest: /usr/local/bin/janr-dashboard
-    mode: "0755"
+    mode: "0750"
+    owner: root
+    group: janr-admin
     content: |
       #!/usr/bin/env bash
       exec /opt/janr/ui/dashboard.py "$@"
