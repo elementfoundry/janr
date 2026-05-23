@@ -31,3 +31,8 @@
           /bin/systemctl status janr*
 
       %janr-admin ALL=(root) NOPASSWD: JANR_SERVICES
+
+- name: Add login message for janr-admin users
+  copy:
+    src: src/janr-admin-guidance.sh
+    dest: /etc/profile.d/janr-admin-guidance.sh
