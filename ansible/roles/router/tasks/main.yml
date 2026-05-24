@@ -152,10 +152,10 @@
     src: dns/janr-unbound.conf.j2
     dest: /etc/unbound/unbound.conf.d/janr-unbound.conf
 
-- name: Deploy unbound static ips
+- name: Deploy unbound fixed ips
   template:
-    src: network/static/janr-unbound-static.j2
-    dest: /etc/unbound/unbound.conf.d/janr-unbound-static.conf
+    src: network/fixed-ips/janr-unbound-fixed-ips.j2
+    dest: /etc/unbound/unbound.conf.d/janr-unbound-fixed-ips.conf
 
 
 # =========================================================
@@ -175,10 +175,10 @@
     src: dns/janr-dnsmasq.conf.j2
     dest: /etc/dnsmasq.d/janr-dnsmasq.conf
 
-- name: Deploy dnsmasq static ips
+- name: Deploy dnsmasq fixed ips
   template: 
-    src: network/static/janr-dnsmasq-static-ip.j2
-    dest: /etc/dnsmasq.d/janr-dnsmasq-static.conf
+    src: network/fixed-ips/janr-dnsmasq-fixed-ips.j2
+    dest: /etc/dnsmasq.d/janr-dnsmasq-fixed-ips.conf
 
 
 
