@@ -1,7 +1,0 @@
-server:
-  local-zone: "home.arpa." static
-  {% for sip in static_ips %}
-  local-data: "{{ sip.domain_name }}. IN A {{ sip.ip_addr }}"
-  local-data-ptr: "{{ sip.ip_addr }} {{ sip.domain_name }}"
-
-  {% endfor %}
