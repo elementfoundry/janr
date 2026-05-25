@@ -5,13 +5,14 @@ import getpass, platform, os
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll, Container
-from textual.widgets import Footer, Static, TabbedContent, TabPane, DataTable, RichLog
-
+from textual.widgets import Footer, Static, TabbedContent, TabPane, DataTable, RichLog, Button
 from widgets.uptime_widget import UptimeWidget
 from widgets.cpu_panel import CpuPanel
 from widgets.memory_panel import MemoryPanel
 from widgets.endpoint_panel import EndpointPanel
 from widgets.storage_panel import StoragePanel
+from widgets.fixed_ip_panel import FixedIpPanel
+from widgets.reserved_ip_widget import ReservedIpWidget
 from widgets.htp import HackThePlanet
 from utils.network import *
 
@@ -23,12 +24,11 @@ class HeaderBar(Horizontal):
         yield UptimeWidget(id="header-center")
         yield Static(f"JANR {JANR_VERSION}", id="header-right")
 
-
 # =========================================================
 # CLIENT VIEW (ONE TABLE PER ENDPOINT)
 # =========================================================
 
-class ClientsView(Vertical):
+class ClientsView(Static):
     def on_mount(self) -> None:
         self.set_interval(3, self.refresh_clients)
         self.refresh_clients()
@@ -135,8 +135,17 @@ class DashboardApp(App[None]):
                     yield StoragePanel()
 
             with TabPane("Clients", id="clients"):
-                yield ClientsView()
-
+                with VerticalScroll():
+                    with Container(id="clients-container", classes="panel") as panel:
+                        panel.border_title = "ENDPOINT CLIENTS"
+                        yield ClientsView()
+                    with Container(id="fixed-ips", classes="panel") as panel:
+                        panel.border_title = "FIXED IPS"
+                        yield FixedIpPanel()
+                    with Container(id="reserved-ips", classes="panel") as panel:
+                        panel.border_title = "RESERVED IPS"
+                        yield ReservedIpWidget()
+                        
             with TabPane("Firewall Log", id="log"):
                 yield LiveLog()
 

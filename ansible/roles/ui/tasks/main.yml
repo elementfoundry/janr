@@ -22,7 +22,15 @@
     state: directory
     owner: root
     group: janr-admin
-    mode: "0750"
+    mode: "0770"
+
+- name: Set permissions for /opt/janr
+  file: 
+    path: /opt/janr
+    owner: root
+    group: janr-admin
+    mode: "0770"
+    recurse: true
 
 - name: Copy UI src into /opt/janr/ui
   copy:
@@ -30,14 +38,14 @@
     dest: /opt/janr/ui/
     owner: root
     group: janr-admin
-    mode: "0750"
+    mode: "0770"
 
 - name: Ensure dashboard is executable
   file:
     path: /opt/janr/ui/dashboard.py
     owner: root
     group: janr-admin
-    mode: "0750"
+    mode: "0770"
 
 # =========================================================
 # 3. CREATE LAUNCHER
@@ -52,3 +60,24 @@
     content: |
       #!/usr/bin/env bash
       exec /opt/janr/ui/dashboard.py "$@"
+
+# =========================================================
+# 4. CREATE RESEVED IP FILES
+# =========================================================
+- name: Create dnsmasq reserved IP file
+  template:
+    src: janr-dnsmasq-reserved-ips.conf.j2
+    dest: /etc/dnsmasq.d/janr-dnsmasq-reserved-ips.conf
+    owner: root
+    group: janr-admin
+    mode: "0660"
+    force: no
+
+- name: Create unbound reserved IP file
+  template:
+    src: janr-unbound-reserved-ips.conf.j2
+    dest: /etc/unbound/unbound.conf.d/janr-unbound-reserved-ips.conf
+    owner: root
+    group: janr-admin
+    mode: "0660"
+    force: no 

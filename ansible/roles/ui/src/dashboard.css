@@ -144,13 +144,28 @@ DataTable .datatable--cursor {
 CpuPanel,
 MemoryPanel,
 StoragePanel,
-EndpointPanel {
+EndpointPanel,
+.panel {
     border: round #ffcc66;
     height: auto;
+}
+
+.panel {
+    padding: 1;
 }
 
 #about-footer {
     height: 5;
     border-top: solid #444444;
     content-align: center middle;
+}
+
+#reserved-ip-buttons {
+    align: center middle;
+    height: auto;
+    padding: 0 0;
+}
+
+#reserved-ip-buttons Button {
+   margin: 0 2;
 }
