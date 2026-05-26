@@ -14,6 +14,7 @@ from widgets.storage_panel import StoragePanel
 from widgets.fixed_ip_panel import FixedIpPanel
 from widgets.reserved_ip_widget import ReservedIpWidget
 from widgets.htp import HackThePlanet
+from views.clients_view import ClientsView
 from utils.network import *
 
 JANR_VERSION = "v0.1a"
@@ -23,61 +24,6 @@ class HeaderBar(Horizontal):
         yield Static(f"{getpass.getuser()} :: {platform.node()}", id="header-left")
         yield UptimeWidget(id="header-center")
         yield Static(f"JANR {JANR_VERSION}", id="header-right")
-
-# =========================================================
-# CLIENT VIEW (ONE TABLE PER ENDPOINT)
-# =========================================================
-
-class ClientsView(Static):
-    def on_mount(self) -> None:
-        self.set_interval(3, self.refresh_clients)
-        self.refresh_clients()
-
-    def refresh_clients(self) -> None:
-        model = build_client_model()
-
-        self.remove_children()
-
-        if not model:
-            self.mount(Static("NO CLIENT DATA"))
-            return
-
-        for endpoint, clients in model.items():
-
-            self.mount(Static(f"[b]{endpoint}[/b]"))
-
-            table = DataTable(cursor_type="none")
-
-            table.add_columns(
-                "Name",
-                "MAC",
-                "IP",
-                "Lease Left",
-                "RX",
-                "TX",
-                "Uptime",
-            )
-
-            if not clients:
-                table.add_row(
-                    "--- no current clients detected ---",
-                    "", "", "", "", "", ""
-                )
-            else:
-                for c in clients:
-                    table.add_row(
-                        c.get("name", "unknown"),
-                        c.get("mac", ""),
-                        c.get("ip", ""),
-                        c.get("lease_left", "-"),
-                        str(c.get("rx", 0)),
-                        str(c.get("tx", 0)),
-                        str(c.get("uptime", 0)),
-                    )
-
-            self.mount(table)
-            self.mount(Static(""))
-
 
 # =========================================================
 # LOG

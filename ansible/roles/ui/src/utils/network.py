@@ -746,3 +746,26 @@ def remove_reserved_ip(
         )
 
         return False
+    
+    # =========================================================
+# CLIENT LIST
+# =========================================================
+
+def get_clients() -> list[dict]:
+
+    model = build_client_model()
+    clients = []
+    for endpoint, rows in model.items():
+        for row in rows:
+            clients.append({
+                "endpoint": endpoint,
+                "hostname": row["name"],
+                "mac": row["mac"],
+                "ip": row["ip"],
+                "lease": row["lease_left"],
+                "rx": row["rx"],
+                "tx": row["tx"],
+                "uptime": row["uptime"],
+            })
+
+    return clients
