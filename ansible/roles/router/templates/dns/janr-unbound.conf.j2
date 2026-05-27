@@ -1,11 +1,11 @@
 server:
     {% for interface in unbound.interfaces %}
-    interface: {{ interface.ip }}
+interface: {{ interface.ip }}
     {% endfor %}
-    port: {{ unbound.port }}
+port: {{ unbound.port }}
 
     {% for access_control in unbound.access_controls %}
-    access-control: {{ access_control.ip }}/{{ access_control.cidr }} allow
+access-control: {{ access_control.ip }}/{{ access_control.cidr }} allow
     {% endfor %}
 
     verbosity: 1
@@ -34,3 +34,4 @@ server:
     do-ip6: yes
 
     root-hints: "{{ unbound.root_hints }}"
+    module-config: "respip validator iterator"
