@@ -1,0 +1,18 @@
+[Unit]
+Description=JANR Blocklist Update Timer
+
+[Timer]
+# Run shortly after boot
+OnBootSec=10min
+
+# Run periodically based on configured interval
+OnUnitActiveSec={{ update_interval }}
+
+# Prevent backlog accumulation if system was off
+Persistent=true
+
+# Avoid overlapping runs
+Unit=janr-blocklists.service
+
+[Install]
+WantedBy=timers.target

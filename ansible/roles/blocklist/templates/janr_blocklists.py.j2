@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+from dataclasses import dataclass
+
+
+UPDATE_INTERVAL = {{ update_interval }}
+
+
+@dataclass(frozen=True)
+class Blocklist:
+    id: str
+    name: str
+    enabled: bool
+    format: str
+    url: str
+
+
+BLOCKLISTS = [
+{% for blocklist in blocklists %}
+    Blocklist(
+        id="{{ blocklist.id }}",
+        name="{{ blocklist.name }}",
+        enabled={{ blocklist.enabled | capitalize }},
+        format="{{ blocklist.format }}",
+        url="{{ blocklist.url }}",
+    ),
+{% endfor %}
+]

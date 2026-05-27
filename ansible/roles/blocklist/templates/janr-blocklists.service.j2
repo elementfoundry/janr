@@ -1,0 +1,25 @@
+[Unit]
+Description=JANR Blocklist Deployment
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+WorkingDirectory=/opt/janr/blocklist
+
+ExecStart=/usr/bin/python3 /opt/janr/blocklist/janr_blocklist_deployment.py
+
+# Ensure imports work reliably
+Environment=PYTHONPATH=/opt/janr/blocklist
+
+# Hardening (lightweight but useful)
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Logging goes to journal by default
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

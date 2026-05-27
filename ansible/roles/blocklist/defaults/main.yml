@@ -1,0 +1,20 @@
+update_interval: 604800 # 7 days in seconds
+
+blocklists:
+  - id: stevenblack
+    name: Steven Black
+    enabled: true
+    format: hosts
+    url: https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+
+  - id: urlhaus
+    name: URLHaus
+    enabled: false
+    format: domains
+    url: https://urlhaus.abuse.ch/downloads/hostfile/
+
+  - id: oisd
+    name: OISD
+    enabled: false
+    format: domains
+    url: https://big.oisd.nl/domainswild

@@ -1,0 +1,93 @@
+---
+
+- name: Ensure JANR blocklist base directory exists
+  file:
+    path: /opt/janr/blocklist
+    state: directory
+    mode: "0755"
+    owner: root
+    group: janr-admin
+
+
+# -------------------------------------------------
+# PRESERVED STATE DIRECTORIES (never wiped)
+# -------------------------------------------------
+
+- name: Ensure JANR blocklist runtime directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+    owner: root
+    group: janr-admin
+  loop:
+    - /opt/janr/blocklist/downloads
+    - /opt/janr/blocklist/rpz
+    - /opt/janr/blocklist/logs
+
+
+# -------------------------------------------------
+# CODE DEPLOYMENT (replace in place)
+# -------------------------------------------------
+
+- name: Deploy parser modules
+  copy:
+    src: src/parsers/
+    dest: /opt/janr/blocklist/parsers/
+    mode: preserve
+    owner: root
+    group: janr-admin
+
+
+- name: Deploy blocklist deployment engine
+  copy:
+    src: src/janr_blocklist_deployment.py
+    dest: /opt/janr/blocklist/janr_blocklist_deployment.py
+    mode: "0755"
+    owner: root
+    group: janr-admin
+
+
+- name: Deploy JANR blocklist config (generated python file)
+  template:
+    src: janr_blocklists.py.j2
+    dest: /opt/janr/blocklist/janr_blocklists.py
+    mode: "0660"
+    owner: root
+    group: janr-admin
+
+
+# -------------------------------------------------
+# SYSTEMD
+# -------------------------------------------------
+
+- name: Deploy systemd service for blocklist deployment
+  template:
+    src: janr-blocklists.service.j2
+    dest: /etc/systemd/system/janr-blocklists.service
+    mode: "0644"
+
+
+- name: Deploy systemd timer for blocklist updates
+  template:
+    src: janr-blocklists.timer.j2
+    dest: /etc/systemd/system/janr-blocklists.timer
+    mode: "0644"
+
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+
+- name: Enable and start JANR blocklist timer
+  systemd:
+    name: janr-blocklists.timer
+    enabled: true
+    state: started
+
+
+- name: Run initial blocklist deployment immediately
+  systemd:
+    name: janr-blocklists.service
+    state: started

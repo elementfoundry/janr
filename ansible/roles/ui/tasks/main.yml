@@ -22,14 +22,14 @@
     state: directory
     owner: root
     group: janr-admin
-    mode: "0770"
+    mode: "0755"
 
 - name: Set permissions for /opt/janr
   file: 
     path: /opt/janr
     owner: root
     group: janr-admin
-    mode: "0770"
+    mode: "0755"
     recurse: true
 
 - name: Copy UI src into /opt/janr/ui
@@ -38,14 +38,14 @@
     dest: /opt/janr/ui/
     owner: root
     group: janr-admin
-    mode: "0770"
+    mode: "0755"
 
 - name: Ensure dashboard is executable
   file:
     path: /opt/janr/ui/dashboard.py
     owner: root
     group: janr-admin
-    mode: "0770"
+    mode: "0755"
 
 # =========================================================
 # 3. CREATE LAUNCHER

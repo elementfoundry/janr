@@ -1,3 +1,4 @@
 - import_playbook: admin.yml
 - import_playbook: router.yml
 - import_playbook: ui.yml
+- import_playbook: blocklist.yml

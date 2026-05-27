@@ -55,6 +55,9 @@ case "$TARGET" in
     ui)
         PLAYBOOK="ui.yml"
         ;;
+    blocklist)
+        PLAYBOOK="blocklist.yml"
+        ;;
     all)
         PLAYBOOK="site.yml"
         ;;
