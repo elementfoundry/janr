@@ -8,6 +8,9 @@ Type=oneshot
 
 WorkingDirectory=/opt/janr/blocklist
 
+# Inject ThreatFox credential at runtime
+LoadCredentialEncrypted=threatfox:threatfox
+
 ExecStart=/usr/bin/python3 /opt/janr/blocklist/janr_blocklist_deployment.py
 
 # Ensure imports work reliably

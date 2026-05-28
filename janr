@@ -52,6 +52,9 @@ case "$TARGET" in
     admin)
         PLAYBOOK="admin.yml"
         ;;
+    credentials)
+        PLAYBOOK="credentials.yml"
+        ;;
     ui)
         PLAYBOOK="ui.yml"
         ;;
