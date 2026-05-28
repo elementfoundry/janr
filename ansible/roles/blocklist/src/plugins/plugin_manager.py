@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+
+import importlib
+import inspect
+import pkgutil
+from pathlib import Path
+
+
+ALLOWED_CATEGORIES = {"format", "transformer"}
+
+
+class PluginManager:
+
+    _plugins = {}
+
+    # -----------------------------
+    # registration
+    # -----------------------------
+
+    @classmethod
+    def register(cls, plugin_cls):
+
+        category = getattr(plugin_cls, "plugin_category", None)
+        name = getattr(plugin_cls, "plugin_name", None)
+
+        if not category or not name:
+            raise ValueError(
+                f"Plugin missing metadata: {plugin_cls}"
+            )
+
+        if category not in ALLOWED_CATEGORIES:
+            raise ValueError(
+                f"Disallowed plugin category: "
+                f"{category} ({plugin_cls})"
+            )
+
+        cls._plugins.setdefault(category, {})
+        cls._plugins[category][name] = plugin_cls
+
+    # -----------------------------
+    # discovery
+    # -----------------------------
+
+    @classmethod
+    def discover(cls, package_name: str):
+        """
+        Auto-discover plugins in a package
+        and register them.
+        """
+
+        package = importlib.import_module(package_name)
+        package_path = Path(package.__file__).parent
+
+        for _, module_name, _ in pkgutil.iter_modules(
+            [str(package_path)]
+        ):
+
+            full_module_name = (
+                f"{package_name}.{module_name}"
+            )
+
+            module = importlib.import_module(
+                full_module_name
+            )
+
+            for _, obj in inspect.getmembers(
+                module,
+                inspect.isclass,
+            ):
+
+                # ensure class belongs to
+                # this module only
+                if obj.__module__ != full_module_name:
+                    continue
+
+                # skip abstract classes
+                if inspect.isabstract(obj):
+                    continue
+
+                # must expose metadata
+                if not getattr(obj, "plugin_name", None):
+                    continue
+
+                if not getattr(obj, "plugin_category", None):
+                    continue
+
+                cls.register(obj)
+
+    # -----------------------------
+    # resolution
+    # -----------------------------
+
+    @classmethod
+    def get(cls, category: str, name: str):
+
+        try:
+            return cls._plugins[category][name]
+
+        except KeyError:
+
+            raise ValueError(
+                f"Unknown plugin: "
+                f"category={category}, name={name}"
+            )
+
+    # -----------------------------
+    # convenience helpers
+    # -----------------------------
+
+    @classmethod
+    def format(cls, name: str):
+        return cls.get("format", name)
+
+    @classmethod
+    def transformer(cls, name: str):
+        return cls.get("transformer", name)
+
+    # -----------------------------
+    # debug
+    # -----------------------------
+
+    @classmethod
+    def list_plugins(cls):
+        return cls._plugins

@@ -3,18 +3,36 @@ update_interval: 604800 # 7 days in seconds
 blocklists:
   - id: stevenblack
     name: Steven Black
-    enabled: true
-    format: hosts
+    enabled: false
+    format: plaintext
+    transformers:
+      - strip_comments
+      - trim
+      - lowercase
+      - hosts_extract_domain
+      - finalize_domain
     url: https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+
+  - id: adaway
+    name: AdAway
+    enabled: true
+    format: plaintext
+    transformers:
+      - strip_comments
+      - trim
+      - lowercase
+      - hosts_extract_domain
+      - finalize_domain
+    url: https://adaway.org/hosts.txt
 
   - id: urlhaus
     name: URLHaus
-    enabled: false
-    format: domains
-    url: https://urlhaus.abuse.ch/downloads/hostfile/
-
-  - id: oisd
-    name: OISD
-    enabled: false
-    format: domains
-    url: https://big.oisd.nl/domainswild
+    enabled: true
+    format: rpz
+    transformers:
+      - strip_comments
+      - trim
+      - lowercase
+      - rpz_extract_domain
+      - finalize_domain
+    url: https://urlhaus.abuse.ch/downloads/rpz/

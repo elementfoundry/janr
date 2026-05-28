@@ -6,7 +6,7 @@ import sys
 import urllib.request
 
 from janr_blocklists import BLOCKLISTS
-from parsers.base import PARSER_REGISTRY
+from plugins.plugin_manager import PluginManager
 
 
 BASE_DIR = pathlib.Path("/opt/janr/blocklist")
@@ -21,7 +21,6 @@ LOG_DIR = BASE_DIR / "logs"
 # -----------------------------
 
 def ensure_directories():
-
     for directory in (DOWNLOAD_DIR, RPZ_DIR, LOG_DIR):
         directory.mkdir(parents=True, exist_ok=True)
 
@@ -31,15 +30,11 @@ def ensure_directories():
 # -----------------------------
 
 def download_blocklist(blocklist):
-
     dest = DOWNLOAD_DIR / f"{blocklist.id}.txt"
 
     print(f"[janr] downloading {blocklist.name}")
 
-    urllib.request.urlretrieve(
-        blocklist.url,
-        dest,
-    )
+    urllib.request.urlretrieve(blocklist.url, dest)
 
     return dest
 
@@ -49,27 +44,53 @@ def download_blocklist(blocklist):
 # -----------------------------
 
 def load_lines(path: pathlib.Path):
-
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         return f.readlines()
 
 
 # -----------------------------
-# parsing
+# pipeline
 # -----------------------------
 
-def parse_blocklist(blocklist, lines):
+def run_pipeline(blocklist, lines):
 
-    parser_class = PARSER_REGISTRY.get(blocklist.format)
+    # -----------------------------
+    # 1. format plugin
+    # -----------------------------
 
-    if parser_class is None:
-        raise ValueError(
-            f"Unknown parser format: {blocklist.format}"
-        )
+    format_cls = PluginManager.format(blocklist.format)
+    format_plugin = format_cls()
 
-    parser = parser_class()
+    records = format_plugin.mutate("\n".join(lines))
 
-    return parser.parse(lines)
+    if not records:
+        return []
+
+    # -----------------------------
+    # 2. transformer chain
+    # -----------------------------
+
+    transformers = [
+        PluginManager.transformer(name)()
+        for name in getattr(blocklist, "transformers", [])
+    ]
+
+    output = []
+
+    for record in records:
+
+        value = record
+
+        for transformer in transformers:
+            value = transformer.mutate(value)
+
+            if value is None:
+                break
+
+        if value is not None:
+            output.append(value)
+
+    return output
 
 
 # -----------------------------
@@ -123,19 +144,16 @@ def write_unbound_config(blocklist, rpz_path):
 
 
 # -----------------------------
-# pipeline
+# deployment
 # -----------------------------
 
 def deploy_blocklist(blocklist):
 
     downloaded = download_blocklist(blocklist)
-
     lines = load_lines(downloaded)
-
-    domains = parse_blocklist(blocklist, lines)
+    domains = run_pipeline(blocklist, lines)
 
     rpz_path = write_rpz(blocklist, domains)
-
     write_unbound_config(blocklist, rpz_path)
 
 
@@ -159,23 +177,23 @@ def restart_unbound():
 
 def main():
 
+    # bootstrap plugins
+    PluginManager.discover("plugins.formats")
+    PluginManager.discover("plugins.transformers")
+
     ensure_directories()
 
-    enabled = [
-        b for b in BLOCKLISTS if b.enabled
-    ]
+    enabled = [b for b in BLOCKLISTS if b.enabled]
 
     if not enabled:
         print("[janr] no enabled blocklists")
         return
 
     for blocklist in enabled:
-
         try:
             deploy_blocklist(blocklist)
 
         except Exception as e:
-
             print(
                 f"[janr] failed {blocklist.name}: {e}",
                 file=sys.stderr,

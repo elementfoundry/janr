@@ -12,6 +12,7 @@ class Blocklist:
     name: str
     enabled: bool
     format: str
+    transformers: list
     url: str
 
 
@@ -20,8 +21,13 @@ BLOCKLISTS = [
     Blocklist(
         id="{{ blocklist.id }}",
         name="{{ blocklist.name }}",
-        enabled={{ blocklist.enabled | capitalize }},
+        enabled={{ blocklist.enabled | capitalize}},
         format="{{ blocklist.format }}",
+        transformers=[
+        {% for t in blocklist.transformers %}
+            "{{ t }}",
+        {% endfor %}
+        ],
         url="{{ blocklist.url }}",
     ),
 {% endfor %}

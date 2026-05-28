@@ -21,23 +21,62 @@
     owner: root
     group: janr-admin
   loop:
-    - /opt/janr/blocklist/downloads
+    - /opt/janr/blocklist/assets
     - /opt/janr/blocklist/rpz
     - /opt/janr/blocklist/logs
 
 
 # -------------------------------------------------
-# CODE DEPLOYMENT (replace in place)
+# WIPE CODE AREA (plugin + engine layer)
 # -------------------------------------------------
 
-- name: Deploy parser modules
+- name: Wipe plugin system directory
+  file:
+    path: /opt/janr/blocklist/plugins
+    state: absent
+
+
+- name: Wipe deployment engine
+  file:
+    path: /opt/janr/blocklist/janr_blocklist_deployment.py
+    state: absent
+
+
+- name: Wipe generated blocklist config
+  file:
+    path: /opt/janr/blocklist/janr_blocklists.py
+    state: absent
+
+
+# -------------------------------------------------
+# RECREATE PLUGIN STRUCTURE
+# -------------------------------------------------
+
+- name: Recreate plugin base directory
+  file:
+    path: /opt/janr/blocklist/plugins
+    state: directory
+    mode: "0755"
+    owner: root
+    group: janr-admin
+
+
+# -------------------------------------------------
+# PLUGIN SYSTEM DEPLOYMENT
+# -------------------------------------------------
+
+- name: Deploy plugin system (formats + transformers + manager)
   copy:
-    src: src/parsers/
-    dest: /opt/janr/blocklist/parsers/
+    src: src/plugins/
+    dest: /opt/janr/blocklist/plugins/
     mode: preserve
     owner: root
     group: janr-admin
 
+
+# -------------------------------------------------
+# BLOCKLIST ENGINE
+# -------------------------------------------------
 
 - name: Deploy blocklist deployment engine
   copy:
@@ -52,7 +91,7 @@
   template:
     src: janr_blocklists.py.j2
     dest: /opt/janr/blocklist/janr_blocklists.py
-    mode: "0660"
+    mode: "0665"
     owner: root
     group: janr-admin
 
