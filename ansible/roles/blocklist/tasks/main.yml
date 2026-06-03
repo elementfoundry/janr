@@ -1,4 +1,38 @@
----
+# -------------------------------------------------
+# BASE PACKAGES
+# -------------------------------------------------
+- name: Ensure blocklist base packages are installed
+  apt:
+    name: "{{ blocklist_packages }}"
+    state: present
+    update_cache: yes
+
+# -------------------------------------------------
+# SETUP LOGGING
+# -------------------------------------------------
+
+- name: Configure JANR blocklist log rotation
+  copy:
+    dest: /etc/logrotate.d/janr-blocklist
+    content: |
+      /run/janr/log/blocklist.log {
+          size 10M
+          rotate 3
+          missingok
+          notifempty
+          copytruncate
+      }
+
+- name: Symlink blocklist log
+  file:
+    src: /run/janr/log/blocklist.log
+    dest: /var/log/janr/blocklist.log
+    state: link
+    force: true
+
+# -------------------------------------------------
+# ENSURE BASE DIRECTORY EXISTS
+# -------------------------------------------------
 
 - name: Ensure JANR blocklist base directory exists
   file:
@@ -7,7 +41,6 @@
     mode: "0755"
     owner: root
     group: janr-admin
-
 
 # -------------------------------------------------
 # PRESERVED STATE DIRECTORIES (never wiped)
@@ -21,10 +54,8 @@
     owner: root
     group: janr-admin
   loop:
-    - /opt/janr/blocklist/assets
+    - /opt/janr/blocklist/downloads
     - /opt/janr/blocklist/rpz
-    - /opt/janr/blocklist/logs
-
 
 # -------------------------------------------------
 # WIPE CODE AREA (plugin + engine layer)
@@ -35,18 +66,20 @@
     path: /opt/janr/blocklist/plugins
     state: absent
 
+- name: Wipe core directory
+  file:
+    path: /opt/janr/blocklist/core
+    state: absent
 
 - name: Wipe deployment engine
   file:
     path: /opt/janr/blocklist/janr_blocklist_deployment.py
     state: absent
 
-
 - name: Wipe generated blocklist config
   file:
     path: /opt/janr/blocklist/janr_blocklists.py
     state: absent
-
 
 # -------------------------------------------------
 # RECREATE PLUGIN STRUCTURE
@@ -60,12 +93,19 @@
     owner: root
     group: janr-admin
 
+- name: Recreate core base directory
+  file:
+    path: /opt/janr/blocklist/core
+    state: directory
+    mode: "0755"
+    owner: root
+    group: janr-admin
 
 # -------------------------------------------------
 # PLUGIN SYSTEM DEPLOYMENT
 # -------------------------------------------------
 
-- name: Deploy plugin system (formats + transformers + manager)
+- name: Deploy plugin system (feeds, datasets, parsers )
   copy:
     src: src/plugins/
     dest: /opt/janr/blocklist/plugins/
@@ -73,6 +113,13 @@
     owner: root
     group: janr-admin
 
+- name: Deploy core
+  copy:
+    src: src/core/
+    dest: /opt/janr/blocklist/core/
+    mode: preserve
+    owner: root
+    group: janr-admin
 
 # -------------------------------------------------
 # BLOCKLIST ENGINE
@@ -86,7 +133,6 @@
     owner: root
     group: janr-admin
 
-
 - name: Deploy JANR blocklist config (generated python file)
   template:
     src: janr_blocklists.py.j2
@@ -94,7 +140,6 @@
     mode: "0665"
     owner: root
     group: janr-admin
-
 
 # -------------------------------------------------
 # SYSTEMD
@@ -106,25 +151,21 @@
     dest: /etc/systemd/system/janr-blocklists.service
     mode: "0644"
 
-
 - name: Deploy systemd timer for blocklist updates
   template:
     src: janr-blocklists.timer.j2
     dest: /etc/systemd/system/janr-blocklists.timer
     mode: "0644"
 
-
 - name: Reload systemd daemon
   systemd:
     daemon_reload: true
-
 
 - name: Enable and start JANR blocklist timer
   systemd:
     name: janr-blocklists.timer
     enabled: true
     state: started
-
 
 - name: Run initial blocklist deployment immediately
   systemd:

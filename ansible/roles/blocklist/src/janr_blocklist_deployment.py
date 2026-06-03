@@ -2,117 +2,52 @@
 
 import pathlib
 import subprocess
-import sys
-import urllib.request
+from pathlib import Path
 
+from core.asset import Asset
+from core.janr_logger import logger
 from janr_blocklists import BLOCKLISTS
 from plugins.plugin_manager import PluginManager
 
+# -----------------------------
+# paths
+# -----------------------------
 
 BASE_DIR = pathlib.Path("/opt/janr/blocklist")
 
 DOWNLOAD_DIR = BASE_DIR / "downloads"
 RPZ_DIR = BASE_DIR / "rpz"
-LOG_DIR = BASE_DIR / "logs"
 
 
 # -----------------------------
 # filesystem setup
 # -----------------------------
 
+
 def ensure_directories():
-    for directory in (DOWNLOAD_DIR, RPZ_DIR, LOG_DIR):
+    """
+    Ensure static deployment directories exist.
+    Runtime log directories are handled via systemd tmpfiles.
+    """
+
+    for directory in (DOWNLOAD_DIR, RPZ_DIR):
         directory.mkdir(parents=True, exist_ok=True)
-
-
-# -----------------------------
-# downloading
-# -----------------------------
-
-def download_blocklist(blocklist):
-    dest = DOWNLOAD_DIR / f"{blocklist.id}.txt"
-
-    print(f"[janr] downloading {blocklist.name}")
-
-    urllib.request.urlretrieve(blocklist.url, dest)
-
-    return dest
-
-
-# -----------------------------
-# file loading
-# -----------------------------
-
-def load_lines(path: pathlib.Path):
-    with open(path, "r", encoding="utf-8", errors="ignore") as f:
-        return f.readlines()
-
-
-# -----------------------------
-# pipeline
-# -----------------------------
-
-def run_pipeline(blocklist, lines):
-
-    # -----------------------------
-    # 1. format plugin
-    # -----------------------------
-
-    format_cls = PluginManager.format(blocklist.format)
-    format_plugin = format_cls()
-
-    records = format_plugin.mutate("\n".join(lines))
-
-    if not records:
-        return []
-
-    # -----------------------------
-    # 2. transformer chain
-    # -----------------------------
-
-    transformers = [
-        PluginManager.transformer(name)()
-        for name in getattr(blocklist, "transformers", [])
-    ]
-
-    output = []
-
-    for record in records:
-
-        value = record
-
-        for transformer in transformers:
-            value = transformer.mutate(value)
-
-            if value is None:
-                break
-
-        if value is not None:
-            output.append(value)
-
-    return output
 
 
 # -----------------------------
 # RPZ generation
 # -----------------------------
 
+
 def write_rpz(blocklist, domains):
 
     rpz_path = RPZ_DIR / f"{blocklist.id}.rpz"
 
-    print(
-        f"[janr] generating RPZ for {blocklist.name} "
-        f"({len(domains)} domains)"
-    )
+    logger.log(f"Generating RPZ for {blocklist.name} ({len(domains)} domains)")
 
-    with open(rpz_path, "w") as f:
-
+    with open(rpz_path, "w", encoding="utf-8") as f:
         f.write("$TTL 2h\n")
-        f.write(
-            "@ IN SOA localhost. root.localhost. "
-            "1 1h 15m 30d 2h\n"
-        )
+        f.write("@ IN SOA localhost. root.localhost. 1 1h 15m 30d 2h\n")
         f.write("  IN NS localhost.\n\n")
 
         for domain in sorted(domains):
@@ -125,19 +60,14 @@ def write_rpz(blocklist, domains):
 # Unbound config generation
 # -----------------------------
 
+
 def write_unbound_config(blocklist, rpz_path):
 
-    conf_path = pathlib.Path(
-        f"/etc/unbound/unbound.conf.d/janr-{blocklist.id}.conf"
-    )
+    conf_path = pathlib.Path(f"/etc/unbound/unbound.conf.d/janr-{blocklist.id}.conf")
 
-    content = (
-        "rpz:\n"
-        f'  name: "{blocklist.id}"\n'
-        f'  zonefile: "{rpz_path}"\n'
-    )
+    content = f'rpz:\n  name: "{blocklist.id}"\n  zonefile: "{rpz_path}"\n'
 
-    with open(conf_path, "w") as f:
+    with open(conf_path, "w", encoding="utf-8") as f:
         f.write(content)
 
     return conf_path
@@ -147,13 +77,25 @@ def write_unbound_config(blocklist, rpz_path):
 # deployment
 # -----------------------------
 
+
 def deploy_blocklist(blocklist):
 
-    downloaded = download_blocklist(blocklist)
-    lines = load_lines(downloaded)
-    domains = run_pipeline(blocklist, lines)
+    all_domains = set()
 
-    rpz_path = write_rpz(blocklist, domains)
+    for asset_cfg in getattr(blocklist, "assets", []):
+        logger.log(f"asset_cfg: {asset_cfg}")
+        asset = Asset(asset_cfg)
+        logger.log(f"Processing asset {asset.id} ({asset.config.feed})")
+
+        try:
+            domains = asset.run()
+            all_domains.update(domains)
+
+        except Exception as e:
+            logger.log(f"Asset failed {asset.id}: {e}", logger.ERROR)
+            continue
+
+    rpz_path = write_rpz(blocklist, all_domains)
     write_unbound_config(blocklist, rpz_path)
 
 
@@ -161,9 +103,10 @@ def deploy_blocklist(blocklist):
 # unbound reload
 # -----------------------------
 
+
 def restart_unbound():
 
-    print("[janr] restarting unbound")
+    logger.log("Restarting unbound")
 
     subprocess.run(
         ["systemctl", "restart", "janr-unbound"],
@@ -175,34 +118,39 @@ def restart_unbound():
 # main
 # -----------------------------
 
+
 def main():
 
-    # bootstrap plugins
-    PluginManager.discover("plugins.formats")
-    PluginManager.discover("plugins.transformers")
+    # bootstrap plugins (feeds, datasets, parsers)
+    PluginManager.discover("plugins.feeds")
+    PluginManager.discover("plugins.datasets")
+    PluginManager.discover("plugins.parsers")
 
     ensure_directories()
 
     enabled = [b for b in BLOCKLISTS if b.enabled]
 
     if not enabled:
-        print("[janr] no enabled blocklists")
+        logger.log("No enabled blocklists found", logger.WARNING)
         return
 
     for blocklist in enabled:
         try:
+            logger.log(f"Deploying blocklist: {blocklist.name}")
             deploy_blocklist(blocklist)
 
         except Exception as e:
-            print(
-                f"[janr] failed {blocklist.name}: {e}",
-                file=sys.stderr,
-            )
+            logger.log(f"Failed blocklist {blocklist.name}: {e}", logger.ERROR)
+            continue
 
     restart_unbound()
 
-    print("[janr] blocklist deployment complete")
+    logger.log("Blocklist deployment complete")
 
 
 if __name__ == "__main__":
+    logger.log("info", logger.INFO)
+    logger.log("debug", logger.DEBUG)
+    logger.log("error", logger.ERROR)
+    logger.log("warning", logger.WARNING)
     main()

@@ -1,38 +1,32 @@
+blocklist_packages:
+  - python3-requests
+
 update_interval: 604800 # 7 days in seconds
 
 blocklists:
-  - id: stevenblack
-    name: Steven Black
-    enabled: false
-    format: plaintext
-    transformers:
-      - strip_comments
-      - trim
-      - lowercase
-      - hosts_extract_domain
-      - finalize_domain
-    url: https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-
   - id: adaway
     name: AdAway
     enabled: true
-    format: plaintext
-    transformers:
-      - strip_comments
-      - trim
-      - lowercase
-      - hosts_extract_domain
-      - finalize_domain
-    url: https://adaway.org/hosts.txt
+    assets:
+      - id: adaway_hosts
+        feed: adaway_feed
+        dataset: adaway_hosts_dataset
+        parser: adaway_parser
 
   - id: urlhaus
     name: URLHaus
     enabled: true
-    format: rpz
-    transformers:
-      - strip_comments
-      - trim
-      - lowercase
-      - rpz_extract_domain
-      - finalize_domain
-    url: https://urlhaus.abuse.ch/downloads/rpz/
+    assets:
+      - id: urlhaus
+        feed: urlhaus_feed
+        dataset: urlhaus_rpz_dataset
+        parser: urlhaus_parser
+
+  - id: threatfox
+    name: ThreatFox
+    enabled: true
+    assets:
+      - id: threatfox
+        feed: threatfox_feed
+        dataset: threatfox_json_dataset
+        parser: threatfox_parser

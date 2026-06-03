@@ -7,13 +7,19 @@ UPDATE_INTERVAL = {{ update_interval }}
 
 
 @dataclass(frozen=True)
+class Asset:
+    id: str
+    feed: str
+    dataset: str
+    parser: str
+
+
+@dataclass(frozen=True)
 class Blocklist:
     id: str
     name: str
     enabled: bool
-    format: str
-    transformers: list
-    url: str
+    assets: list
 
 
 BLOCKLISTS = [
@@ -21,14 +27,18 @@ BLOCKLISTS = [
     Blocklist(
         id="{{ blocklist.id }}",
         name="{{ blocklist.name }}",
-        enabled={{ blocklist.enabled | capitalize}},
-        format="{{ blocklist.format }}",
-        transformers=[
-        {% for t in blocklist.transformers %}
-            "{{ t }}",
-        {% endfor %}
+        enabled={{ 'True' if blocklist.enabled else 'False' }},
+
+        assets=[
+{% for asset in blocklist.assets %}
+            Asset(
+                id="{{ asset.id }}",
+                feed="{{ asset.feed }}",
+                dataset="{{ asset.dataset }}",
+                parser="{{ asset.parser }}"
+            ){% if not loop.last %},{% endif %}
+{% endfor %}
         ],
-        url="{{ blocklist.url }}",
-    ),
+    ){% if not loop.last %},{% endif %}
 {% endfor %}
 ]
