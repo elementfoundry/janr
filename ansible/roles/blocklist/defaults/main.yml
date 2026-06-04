@@ -12,6 +12,7 @@ blocklists:
         feed: adaway_feed
         dataset: adaway_hosts_dataset
         parser: adaway_parser
+        preserve_artifacts: false
 
   - id: urlhaus
     name: URLHaus
@@ -21,6 +22,7 @@ blocklists:
         feed: urlhaus_feed
         dataset: urlhaus_rpz_dataset
         parser: urlhaus_parser
+        preserve_artifacts: false
 
   - id: threatfox
     name: ThreatFox
@@ -30,3 +32,4 @@ blocklists:
         feed: threatfox_feed
         dataset: threatfox_json_dataset
         parser: threatfox_parser
+        preserve_artifacts: true

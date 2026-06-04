@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+
 from plugins.plugin_manager import PluginManager
 
 from core.janr_logger import logger
@@ -16,6 +18,11 @@ class Asset:
         self.feed_name = config.feed
         self.dataset_name = config.dataset
         self.parser_name = config.parser
+
+        self.preserve_artifacts = config.preserve_artifacts
+
+        if not isinstance(self.preserve_artifacts, bool):
+            raise TypeError(f"Asset {self.id}: preserve_artifacts must be a boolean")
 
         self.feed = None
         self.dataset = None
@@ -50,9 +57,35 @@ class Asset:
 
         dataset_path = self.feed.fetch(self)
 
-        self.dataset = self.dataset_cls(dataset_path)
+        try:
+            self.dataset = self.dataset_cls(dataset_path)
 
-        return self.finalize()
+            return self.finalize()
+
+        finally:
+            self._cleanup_artifact(dataset_path)
+
+    # -----------------------------
+    # artifact cleanup
+    # -----------------------------
+
+    def _cleanup_artifact(self, dataset_path):
+
+        if self.preserve_artifacts:
+            logger.log(f"Preserving artifact for asset {self.id}: {dataset_path}")
+
+            return
+
+        try:
+            Path(dataset_path).unlink(missing_ok=True)
+
+            logger.log(f"Removed artifact for asset {self.id}: {dataset_path}")
+
+        except Exception as e:
+            logger.log(
+                f"Failed to remove artifact {dataset_path}: {e}",
+                logger.ERROR,
+            )
 
     # -----------------------------
     # finalization step
@@ -77,6 +110,7 @@ class Asset:
                     f"Parser error: {e}",
                     logger.ERROR,
                 )
+
                 continue
 
             if value:

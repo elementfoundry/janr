@@ -14,7 +14,7 @@ from plugins.plugin_manager import PluginManager
 # -----------------------------
 
 BASE_DIR = pathlib.Path("/opt/janr/blocklist")
-DOWNLOAD_DIR = Path("/run/janr/blocklist/download")
+DOWNLOAD_DIR = Path("/run/janr/blocklist/downloads")
 RPZ_DIR = Path("/run/janr/blocklist/rpz")
 
 
@@ -142,8 +142,4 @@ def main():
 
 
 if __name__ == "__main__":
-    logger.log("info", logger.INFO)
-    logger.log("debug", logger.DEBUG)
-    logger.log("error", logger.ERROR)
-    logger.log("warning", logger.WARNING)
     main()

@@ -12,6 +12,7 @@ class Asset:
     feed: str
     dataset: str
     parser: str
+    preserve_artifacts: bool
 
 
 @dataclass(frozen=True)
@@ -35,7 +36,8 @@ BLOCKLISTS = [
                 id="{{ asset.id }}",
                 feed="{{ asset.feed }}",
                 dataset="{{ asset.dataset }}",
-                parser="{{ asset.parser }}"
+                parser="{{ asset.parser }}",
+                preserve_artifacts={{ 'True' if asset.preserve_artifacts else 'False' }}
             ){% if not loop.last %},{% endif %}
 {% endfor %}
         ],
