@@ -10,7 +10,7 @@ class Feed(ABC):
     plugin_category = "feed"
     plugin_name = None
 
-    DOWNLOAD_DIR = Path("/opt/janr/blocklist/downloads")
+    DOWNLOAD_DIR = Path("/run/janr/blocklist/downloads")
 
     def __init__(self):
         self.logger = logger

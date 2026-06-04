@@ -14,20 +14,13 @@ from plugins.plugin_manager import PluginManager
 # -----------------------------
 
 BASE_DIR = pathlib.Path("/opt/janr/blocklist")
-
-DOWNLOAD_DIR = BASE_DIR / "downloads"
-RPZ_DIR = BASE_DIR / "rpz"
-
-
-# -----------------------------
-# filesystem setup
-# -----------------------------
+DOWNLOAD_DIR = Path("/run/janr/blocklist/download")
+RPZ_DIR = Path("/run/janr/blocklist/rpz")
 
 
 def ensure_directories():
     """
-    Ensure static deployment directories exist.
-    Runtime log directories are handled via systemd tmpfiles.
+    Ensure runtime directories exist.
     """
 
     for directory in (DOWNLOAD_DIR, RPZ_DIR):
@@ -121,12 +114,12 @@ def restart_unbound():
 
 def main():
 
+    ensure_directories()
+
     # bootstrap plugins (feeds, datasets, parsers)
     PluginManager.discover("plugins.feeds")
     PluginManager.discover("plugins.datasets")
     PluginManager.discover("plugins.parsers")
-
-    ensure_directories()
 
     enabled = [b for b in BLOCKLISTS if b.enabled]
 
