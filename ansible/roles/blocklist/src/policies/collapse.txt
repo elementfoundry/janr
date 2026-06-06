@@ -1,0 +1,34 @@
+# JANR RPZ collapse policy
+# One domain per line
+# These domains will be collapsed to their registrable root
+
+adcolony.com
+adnxs.com
+adroll.com
+adsafeprotected.com
+adsrvr.org
+amazon-adsystem.com
+appier.net
+advertising.com
+bidr.io
+casalemedia.com
+criteo.com
+criteo.net
+doubleclick.net
+exelator.com
+googleadservices.com
+googlesyndication.com
+lijit.com
+moatads.com
+moatpixel.com
+mookie1.com
+outbrain.com
+pubmatic.com
+rayjump.com
+rubiconproject.com
+scorecardresearch.com
+smartadserver.com
+smaato.net
+spotxchange.com
+taboola.com
+yieldmo.com

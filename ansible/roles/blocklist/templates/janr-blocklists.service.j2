@@ -1,7 +1,13 @@
 [Unit]
 Description=JANR Blocklist Deployment
-After=network-online.target
-Wants=network-online.target
+
+# Stronger network readiness dependency (replace generic network-online.target)
+After=NetworkManager-wait-online.service
+Wants=NetworkManager-wait-online.service
+
+# Optional but recommended if using systemd-resolved
+After=systemd-resolved.service
+Wants=systemd-resolved.service
 
 [Service]
 Type=oneshot
@@ -11,16 +17,17 @@ WorkingDirectory=/opt/janr/blocklist
 # Inject ThreatFox credential at runtime
 LoadCredentialEncrypted=janr_threatfox:janr_threatfox
 
-ExecStart=/usr/bin/python3 /opt/janr/blocklist/janr_blocklist_deployment.py
-
 # Ensure imports work reliably
 Environment=PYTHONPATH=/opt/janr/blocklist
 
-# Hardening (lightweight but useful)
-NoNewPrivileges=true
-PrivateTmp=true
+ExecStartPre=/bin/sleep 10
 
-# Logging goes to journal by default
+ExecStart=/usr/bin/python3 /opt/janr/blocklist/janr_blocklist_deployment.py
+
+# Hardening (kept minimal; avoid early-network side effects)
+NoNewPrivileges=true
+# PrivateTmp=true   # intentionally disabled for now while diagnosing network race
+
 StandardOutput=journal
 StandardError=journal
 

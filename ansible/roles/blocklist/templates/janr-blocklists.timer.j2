@@ -2,17 +2,20 @@
 Description=JANR Blocklist Update Timer
 
 [Timer]
-# Run shortly after boot
-OnBootSec=10min
+# Fire shortly after systemd startup (better semantics than OnBootSec)
+OnStartupSec=1min
 
 # Run periodically based on configured interval
 OnUnitActiveSec={{ update_interval }}
 
-# Prevent backlog accumulation if system was off
+# If system was down, run once after boot to catch up missed executions
 Persistent=true
 
-# Avoid overlapping runs
+# Explicitly bind to service
 Unit=janr-blocklists.service
+
+# Optional: small jitter to avoid boot-time thundering herd
+RandomizedDelaySec=15s
 
 [Install]
 WantedBy=timers.target

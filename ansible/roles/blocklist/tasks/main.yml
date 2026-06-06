@@ -18,8 +18,9 @@
     owner: root
     group: janr-admin
   loop:
-    - /run/janr/blocklist/downloads
-    - /run/janr/blocklist/rpz
+    - /run/janr/blocklist/artifacts/downloads
+    - /run/janr/blocklist/artifacts/rpz
+    - /run/janr/blocklist/rpz # final output (janr-unified.rpz lives here)
 
 # -------------------------------------------------
 # SETUP LOGGING

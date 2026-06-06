@@ -12,7 +12,7 @@ blocklists:
         feed: adaway_feed
         dataset: adaway_hosts_dataset
         parser: adaway_parser
-        preserve_artifacts: false
+        preserve_artifacts: true
 
   - id: urlhaus
     name: URLHaus
@@ -22,7 +22,7 @@ blocklists:
         feed: urlhaus_feed
         dataset: urlhaus_rpz_dataset
         parser: urlhaus_parser
-        preserve_artifacts: false
+        preserve_artifacts: true
 
   - id: threatfox
     name: ThreatFox
