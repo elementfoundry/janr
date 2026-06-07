@@ -9,9 +9,9 @@ UPDATE_INTERVAL = {{ update_interval }}
 @dataclass(frozen=True)
 class Asset:
     id: str
-    feed: str
-    dataset: str
-    parser: str
+    feed_name: str
+    dataset_name: str
+    parser_name: str
     preserve_artifacts: bool
 
 
@@ -34,9 +34,9 @@ BLOCKLISTS = [
 {% for asset in blocklist.assets %}
             Asset(
                 id="{{ asset.id }}",
-                feed="{{ asset.feed }}",
-                dataset="{{ asset.dataset }}",
-                parser="{{ asset.parser }}",
+                feed_name="{{ asset.feed_name }}",
+                dataset_name="{{ asset.dataset_name }}",
+                parser_name="{{ asset.parser_name }}",
                 preserve_artifacts={{ 'True' if asset.preserve_artifacts else 'False' }}
             ){% if not loop.last %},{% endif %}
 {% endfor %}

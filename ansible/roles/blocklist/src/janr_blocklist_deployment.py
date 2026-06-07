@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import traceback
 from pathlib import Path
 
 from core.asset import Asset
@@ -123,7 +124,7 @@ def main():
             for asset_cfg in getattr(blocklist, "assets", []):
                 asset = Asset(asset_cfg, blocklist.id)
 
-                logger.log(f"Processing asset {asset.id} ({asset.config.feed})")
+                logger.log(f"Processing asset {asset.id} ({asset.feed_name})")
 
                 domains = asset.run()
 
@@ -160,6 +161,7 @@ def main():
                 f"Failed blocklist {blocklist.name}: {e}",
                 logger.ERROR,
             )
+            logger.log(traceback.format_exc())
             continue
 
     # -------------------------

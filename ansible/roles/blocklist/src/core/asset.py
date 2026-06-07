@@ -10,222 +10,69 @@ from core.janr_logger import logger
 
 class Asset:
     def __init__(self, config, blocklist_id: str):
-
         logger.log(f"Creating Asset: {config}")
-
         self.config = config
-
-        self.id = config.id
         self.blocklist_id = blocklist_id
-
-        self.feed_name = config.feed
-        self.dataset_name = config.dataset
-        self.parser_name = config.parser
-
-        self.preserve_artifacts = config.preserve_artifacts
-
-        if not isinstance(self.preserve_artifacts, bool):
-            raise TypeError(f"Asset {self.id}: preserve_artifacts must be a boolean")
-
-        self.feed = None
-        self.dataset = None
-        self.parser = None
-
         self._init_plugins()
 
-    # -----------------------------
-    # plugin wiring
-    # -----------------------------
+    def __getattr__(self, name):
+        try:
+            return getattr(self.config, name)
+        except AttributeError:
+            raise AttributeError(
+                f"{self.__class__.__name__!s} has no attribute '{name}'"
+            ) from None
 
     def _init_plugins(self):
-
         logger.log(f"Initializing plugins for asset {self.id}")
-
         feed_cls = PluginManager.feed(self.feed_name)
         dataset_cls = PluginManager.dataset(self.dataset_name)
         parser_cls = PluginManager.parser(self.parser_name)
 
-        self.feed = feed_cls()
+        self.feed_instance = feed_cls()
         self.dataset_cls = dataset_cls
-        self.parser = parser_cls(asset=self)
+        self.parser_instance = parser_cls(asset=self)
 
-        # register at BLOCKLIST level (correct identity)
         artifact_registry.register(
             self.blocklist_id,
             self.preserve_artifacts,
         )
 
-    # -----------------------------
-    # execution lifecycle
-    # -----------------------------
-
     def run(self):
-
-        dataset_path = self.feed.fetch(self)
-
+        dataset_path = self.feed_instance.fetch(self)
         try:
             self.dataset = self.dataset_cls(dataset_path)
             return self.finalize()
-
         finally:
             self._cleanup_artifact(dataset_path)
 
-    # -----------------------------
-    # artifact cleanup
-    # -----------------------------
-
     def _cleanup_artifact(self, dataset_path):
-
         if artifact_registry.should_preserve(self.blocklist_id):
             logger.log(
                 f"Preserving artifact for blocklist {self.blocklist_id}: {dataset_path}"
             )
             return
-
         try:
             Path(dataset_path).unlink(missing_ok=True)
             logger.log(f"Removed artifact: {dataset_path}")
-
         except Exception as e:
             logger.log(
                 f"Failed to remove artifact {dataset_path}: {e}",
                 logger.ERROR,
             )
 
-    # -----------------------------
-    # finalization
-    # -----------------------------
-
     def finalize(self):
-
         domains = set()
-
-        if not self.dataset:
+        if self.dataset is None:
             raise RuntimeError(f"Dataset not initialized for asset {self.id}")
-
-        if not self.parser:
+        if self.parser_instance is None:
             raise RuntimeError(f"Parser not initialized for asset {self.id}")
-
         for record in self.dataset.records():
             try:
-                value = self.parser.process(record)
+                value = self.parser_instance.process(record)
             except Exception as e:
                 logger.log(f"Parser error: {e}", logger.ERROR)
                 continue
-
             if value:
                 domains.add(value)
-
         return domains
-
-
-# #!/usr/bin/env python3
-
-# from pathlib import Path
-
-# from plugins.plugin_manager import PluginManager
-
-# from core.artifact_registry import artifact_registry
-# from core.janr_logger import logger
-
-
-# class Asset:
-#     def __init__(self, config):
-
-#         logger.log(f"Creating Asset: {config}")
-
-#         self.config = config
-
-#         self.id = config.id
-#         self.feed_name = config.feed
-#         self.dataset_name = config.dataset
-#         self.parser_name = config.parser
-
-#         self.preserve_artifacts = config.preserve_artifacts
-
-#         if not isinstance(self.preserve_artifacts, bool):
-#             raise TypeError(f"Asset {self.id}: preserve_artifacts must be a boolean")
-
-#         self.feed = None
-#         self.dataset = None
-#         self.parser = None
-#         self.dataset_cls = None
-
-#         self._init_plugins()
-
-#         # register asset-level policy
-#         artifact_registry.register(
-#             self.id,
-#             self.preserve_artifacts,
-#         )
-
-#     # -----------------------------
-#     # plugin wiring
-#     # -----------------------------
-
-#     def _init_plugins(self):
-
-#         logger.log(f"Initializing plugins for asset {self.id}")
-
-#         feed_cls = PluginManager.feed(self.feed_name)
-#         dataset_cls = PluginManager.dataset(self.dataset_name)
-#         parser_cls = PluginManager.parser(self.parser_name)
-
-#         self.feed = feed_cls()
-#         self.dataset_cls = dataset_cls
-#         self.parser = parser_cls(asset=self)
-
-#     # -----------------------------
-#     # execution lifecycle
-#     # -----------------------------
-
-#     def run(self):
-
-#         # Fetch dataset (this is a download artifact)
-#         dataset_path = self.feed.fetch(self)
-
-#         # register download artifact immediately
-#         artifact_registry.register_download(
-#             self.id,
-#             dataset_path,
-#         )
-
-#         try:
-#             self.dataset = self.dataset_cls(dataset_path)
-#             return self.finalize()
-
-#         finally:
-#             # IMPORTANT:
-#             # no direct cleanup here anymore
-#             # cleanup is handled by artifact_registry + builder
-#             pass
-
-#     # -----------------------------
-#     # finalization step
-#     # -----------------------------
-
-#     def finalize(self):
-
-#         domains = set()
-
-#         if not self.dataset:
-#             raise RuntimeError(f"Dataset not initialized for asset {self.id}")
-
-#         if not self.parser:
-#             raise RuntimeError(f"Parser not initialized for asset {self.id}")
-
-#         for record in self.dataset.records():
-#             try:
-#                 value = self.parser.process(record)
-
-#             except Exception as e:
-#                 logger.log(
-#                     f"Parser error: {e}",
-#                     logger.ERROR,
-#                 )
-#                 continue
-
-#             if value:
-#                 domains.add(value)
-
-#         return domains

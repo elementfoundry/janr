@@ -9,9 +9,9 @@ blocklists:
     enabled: true
     assets:
       - id: adaway_hosts
-        feed: adaway_feed
-        dataset: adaway_hosts_dataset
-        parser: adaway_parser
+        feed_name: adaway_feed
+        dataset_name: adaway_hosts_dataset
+        parser_name: adaway_parser
         preserve_artifacts: true
 
   - id: urlhaus
@@ -19,9 +19,9 @@ blocklists:
     enabled: true
     assets:
       - id: urlhaus
-        feed: urlhaus_feed
-        dataset: urlhaus_rpz_dataset
-        parser: urlhaus_parser
+        feed_name: urlhaus_feed
+        dataset_name: urlhaus_rpz_dataset
+        parser_name: urlhaus_parser
         preserve_artifacts: true
 
   - id: threatfox
@@ -29,7 +29,7 @@ blocklists:
     enabled: true
     assets:
       - id: threatfox
-        feed: threatfox_feed
-        dataset: threatfox_json_dataset
-        parser: threatfox_parser
+        feed_name: threatfox_feed
+        dataset_name: threatfox_json_dataset
+        parser_name: threatfox_parser
         preserve_artifacts: true
