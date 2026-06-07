@@ -5,7 +5,7 @@ from pathlib import Path
 from plugins.plugin_manager import PluginManager
 
 from core.artifact_registry import artifact_registry
-from core.janr_logger import logger
+from core.logger import logger
 
 
 class Asset:

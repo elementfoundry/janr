@@ -5,7 +5,7 @@ import inspect
 import pkgutil
 from pathlib import Path
 
-from core.janr_logger import logger
+from core.logger import logger
 
 ALLOWED_CATEGORIES = {"feed", "dataset", "parser"}
 

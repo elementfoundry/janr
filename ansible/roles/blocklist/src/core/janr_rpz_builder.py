@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from core.artifact_registry import artifact_registry
-from core.janr_logger import logger
+from core.logger import logger
 
 
 class JANRRPZBuilder:

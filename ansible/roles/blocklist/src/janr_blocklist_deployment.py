@@ -5,8 +5,8 @@ import traceback
 from pathlib import Path
 
 from core.asset import Asset
-from core.janr_logger import logger
 from core.janr_rpz_builder import janr_rpz_builder
+from core.logger import logger
 from janr_blocklists import BLOCKLISTS
 from plugins.plugin_manager import PluginManager
 

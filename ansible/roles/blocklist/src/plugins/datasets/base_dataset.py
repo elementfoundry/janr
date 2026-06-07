@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from core.janr_logger import logger
+from core.logger import logger
 
 
 class Dataset(ABC):

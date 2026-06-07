@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 
-from core.janr_logger import logger
+from core.logger import logger
 
 
 class Feed(ABC):
