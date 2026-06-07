@@ -5,8 +5,8 @@ import traceback
 from pathlib import Path
 
 from core.asset import Asset
-from core.janr_rpz_builder import janr_rpz_builder
 from core.logger import logger
+from core.rpz_builder import rpz_builder
 from janr_blocklists import BLOCKLISTS
 from plugins.plugin_manager import PluginManager
 
@@ -154,7 +154,7 @@ def main():
             # ingest into builder (blocklist-aware)
             # ---------------------
 
-            janr_rpz_builder.ingest_rpz_file(blocklist.id, rpz_path)
+            rpz_builder.ingest_rpz_file(blocklist.id, rpz_path)
 
         except Exception as e:
             logger.log(
@@ -168,9 +168,9 @@ def main():
     # build stage
     # -------------------------
 
-    logger.log(f"Indexed {len(janr_rpz_builder.domain_index)} unique domains")
+    logger.log(f"Indexed {len(rpz_builder.domain_index)} unique domains")
 
-    janr_rpz_builder.finalize(
+    rpz_builder.finalize(
         output_dir=FINAL_RPZ_DIR,
         output_name="janr-unified.rpz",
     )
